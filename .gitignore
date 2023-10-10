@@ -1,0 +1,9 @@
+venv/
+.env
+.idea
+*.log
+*.cache
+*.pyc
+*.pyo
+*~
+*.sqlite3
