@@ -48,7 +48,7 @@ class ProviderCategory(models.Model):
     )
 
     def __str__(self):
-        return f'{self.name} ({self.translated_name or 'Перевод отсутствует'})'
+        return f'{self.name} ({self.translated_name or "Перевод отсутствует"})'
 
     class Meta:
         verbose_name = 'Категория с системе поставщика'
@@ -74,7 +74,7 @@ class ProviderCharacteristic(models.Model):
     )
 
     def __str__(self):
-        return f'{self.name} ({self.translated_name or 'Перевод отсутствует'})'
+        return f'{self.name} ({self.translated_name or "Перевод отсутствует"})'
 
     class Meta:
         verbose_name = 'Характеристика товара с системе поставщика'
@@ -104,7 +104,7 @@ class ProviderCharacteristicValue(models.Model):
         return self.__str__()
 
     def __str__(self):
-        return f'{self.value} ({self.translated_value or 'Перевод отсутствует'})'
+        return f'{self.value} ({self.translated_value or "Перевод отсутствует"})'
 
     class Meta:
         verbose_name = 'Значение характеристики в системе поставщика'
@@ -168,7 +168,7 @@ class ScrappedProduct(models.Model):
     )
 
     def __str__(self):
-        return f'{self.name} ({self.translated_name or 'Перевод отсутствует'})'
+        return f'{self.name} ({self.translated_name or "Перевод отсутствует"})'
 
     class Meta:
         verbose_name = 'Спаршенный товар'
@@ -176,7 +176,8 @@ class ScrappedProduct(models.Model):
 
 
 def collect_image_path(instance, filename):
-        return f"{instance.product.provider_category_id}/{instance.product.id}/{filename}"
+    return f'{instance.product.provider_category_id}/{instance.product.id}/{filename}'
+
 
 class ProductImage(models.Model):
     image = models.ImageField(
