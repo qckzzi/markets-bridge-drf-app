@@ -1,4 +1,7 @@
-from django.contrib import admin
+from django.contrib import (
+    admin,
+)
+
 from parser_targets.models import (
     RawCategory,
     RawProduct,
@@ -13,6 +16,3 @@ class RawCategoryAdmin(admin.ModelAdmin):
 @admin.register(RawProduct)
 class RawProductAdmin(admin.ModelAdmin):
     pass
-
-
-

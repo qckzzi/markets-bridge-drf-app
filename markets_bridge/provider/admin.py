@@ -1,11 +1,14 @@
-from django.contrib import admin
+from django.contrib import (
+    admin,
+)
+
 from provider.models import (
-    ProviderMarketplace,
+    ProductImage,
     ProviderCategory,
     ProviderCharacteristic,
     ProviderCharacteristicValue,
+    ProviderMarketplace,
     ScrappedProduct,
-    ProductImage,
 )
 
 
@@ -16,7 +19,7 @@ class ProviderMarketplaceAdmin(admin.ModelAdmin):
 
 @admin.register(ProviderCategory)
 class ProviderCategoryAdmin(admin.ModelAdmin):
-    pass
+    search_fields = ('external_id', 'name')
 
 
 @admin.register(ProviderCharacteristic)

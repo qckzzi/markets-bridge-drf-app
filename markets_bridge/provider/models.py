@@ -1,4 +1,6 @@
-from django.db import models
+from django.db import (
+    models,
+)
 
 
 class ProviderMarketplace(models.Model):
@@ -35,6 +37,8 @@ class ProviderCategory(models.Model):
     )
     external_id = models.PositiveIntegerField(
         verbose_name='Внешний id в системе маркетплейса',
+        db_index=True,
+        unique=True,
     )
     provider_marketplace = models.ForeignKey(
         'provider.ProviderMarketplace',
@@ -44,7 +48,7 @@ class ProviderCategory(models.Model):
     )
 
     def __str__(self):
-        return f'{self.name} ({self.translated_name})'
+        return f'{self.name} ({self.translated_name or 'Перевод отсутствует'})'
 
     class Meta:
         verbose_name = 'Категория с системе поставщика'
@@ -120,6 +124,9 @@ class ScrappedProduct(models.Model):
     )
     description = models.TextField(
         verbose_name='Описание',
+        default='',
+        null=True,
+        blank=True,
     )
     translated_description = models.TextField(
         verbose_name='Переведенное описание',

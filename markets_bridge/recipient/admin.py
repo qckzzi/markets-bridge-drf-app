@@ -1,9 +1,12 @@
-from django.contrib import admin
+from django.contrib import (
+    admin,
+)
+
 from recipient.models import (
-    RecipientMarketplace,
     RecipientCategory,
     RecipientCharacteristic,
     RecipientCharacteristicValue,
+    RecipientMarketplace,
 )
 
 
@@ -25,4 +28,3 @@ class RecipientCharacteristicAdmin(admin.ModelAdmin):
 @admin.register(RecipientCharacteristicValue)
 class RecipientCharacteristicValueAdmin(admin.ModelAdmin):
     pass
-

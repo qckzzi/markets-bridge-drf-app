@@ -1,6 +1,11 @@
-from rest_framework.serializers import ModelSerializer
+from rest_framework.serializers import (
+    ModelSerializer,
+)
 
-from parser_targets.models import RawCategory, RawProduct
+from parser_targets.models import (
+    RawCategory,
+    RawProduct,
+)
 
 
 class RawCategorySerializer(ModelSerializer):
