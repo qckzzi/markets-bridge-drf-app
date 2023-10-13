@@ -19,7 +19,7 @@ class ProviderMarketplaceAdmin(admin.ModelAdmin):
 
 @admin.register(ProviderCategory)
 class ProviderCategoryAdmin(admin.ModelAdmin):
-    search_fields = ('external_id', 'name')
+    search_fields = ('external_id', 'id', 'name', 'provider_marketplace__name')
 
 
 @admin.register(ProviderCharacteristic)
@@ -34,7 +34,7 @@ class ProviderCharacteristicValueAdmin(admin.ModelAdmin):
 
 @admin.register(ScrappedProduct)
 class ScrappedProductAdmin(admin.ModelAdmin):
-    pass
+    list_display = ('name', 'price',)
 
 
 @admin.register(ProductImage)

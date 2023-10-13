@@ -11,15 +11,15 @@ class RawCategory(models.Model):
     url = models.URLField(
         verbose_name='URL товара',
     )
-    status = models.BooleanField(
+    is_allowed_import = models.BooleanField(
         verbose_name='Разрешение для импорта',
+        default=False,
     )
-    provider_category = models.ForeignKey(
-        'provider.ProviderCategory',
-        verbose_name='Категория в системе поставщика',
-        null=True,
-        on_delete=models.SET_NULL,
-        related_name='row_categories',
+    provider_marketplace = models.ForeignKey(
+        'provider.ProviderMarketplace',
+        on_delete=models.CASCADE,
+        related_name='raw_categories',
+        verbose_name='Маркетплейс-поставщик',
     )
 
     def __repr__(self):
@@ -41,15 +41,15 @@ class RawProduct(models.Model):
     url = models.URLField(
         verbose_name='URL товара',
     )
-    status = models.BooleanField(
+    is_allowed_import = models.BooleanField(
         verbose_name='Разрешение для импорта',
+        default=False,
     )
-    raw_category = models.ForeignKey(
-        'parser_targets.RawCategory',
-        verbose_name='Сырая категория',
-        null=True,
-        on_delete=models.SET_NULL,
+    provider_marketplace = models.ForeignKey(
+        'provider.ProviderMarketplace',
+        on_delete=models.CASCADE,
         related_name='raw_products',
+        verbose_name='Маркетплейс-поставщик',
     )
 
     def __repr__(self):

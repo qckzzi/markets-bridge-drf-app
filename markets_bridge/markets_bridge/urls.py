@@ -14,16 +14,43 @@ from parser_targets.views import (
     RawProductAPI,
 )
 from provider.views import (
-    ProductImageAPI,
-    ScrappedProductAPI,
+    ProductImageAPIViewSet,
+    ProviderCategoryAPIViewSet,
+    ProviderCharacteristicAPIViewSet,
+    ProviderCharacteristicValueAPIViewSet,
+    ScrappedProductAPIViewSet,
 )
 
 
 router = DefaultRouter()
-router.register(r'target_categories', RawCategoryAPI)
-router.register(r'target_products', RawProductAPI)
-router.register(r'scrapped_products', ScrappedProductAPI)
-router.register(r'product_images', ProductImageAPI)
+router.register(
+    r'target_categories',
+    RawCategoryAPI,
+)
+router.register(
+    r'target_products',
+    RawProductAPI,
+)
+router.register(
+    r'scrapped_products',
+    ScrappedProductAPIViewSet,
+)
+router.register(
+    r'product_images',
+    ProductImageAPIViewSet,
+)
+router.register(
+    r'provider_categories',
+    ProviderCategoryAPIViewSet,
+)
+router.register(
+    r'provider_characteristics',
+    ProviderCharacteristicAPIViewSet,
+)
+router.register(
+    r'provider_characteristic_values',
+    ProviderCharacteristicValueAPIViewSet,
+)
 
 
 urlpatterns = [
