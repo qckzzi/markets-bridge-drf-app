@@ -36,12 +36,15 @@ class RecipientCategory(models.Model):
     )
     external_id = models.PositiveIntegerField(
         verbose_name='Внешний id в системе маркетплейса',
+        db_index=True,
+        unique=True,
     )
     parent = models.ForeignKey(
         'self',
         verbose_name='Родительская категория',
         on_delete=models.PROTECT,
         related_name='children',
+        null=True,
     )
     recipient_marketplace = models.ForeignKey(
         'recipient.RecipientMarketplace',
@@ -57,8 +60,36 @@ class RecipientCategory(models.Model):
         return self.name
 
     class Meta:
-        verbose_name = 'Категория с системе получателя'
+        verbose_name = 'Категория в системе получателя'
         verbose_name_plural = 'Категории в системе получателя'
+
+
+class RecipientProductType(models.Model):
+    name = models.CharField(
+        verbose_name='Наименование',
+        max_length=100,
+    )
+    external_id = models.PositiveIntegerField(
+        verbose_name='Внешний id в системе маркетплейса',
+        db_index=True,
+        unique=True,
+    )
+    category = models.ForeignKey(
+        'recipient.RecipientCategory',
+        verbose_name='Категория',
+        on_delete=models.PROTECT,
+        related_name='product_types',
+    )
+
+    def __repr__(self):
+        return f'{self.__str__()} (id: {self.id})'
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name = 'Тип товара в системе получателя'
+        verbose_name_plural = 'Типы товара в системе получателя'
 
 
 class RecipientCharacteristic(models.Model):

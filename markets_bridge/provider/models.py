@@ -202,7 +202,9 @@ class ScrappedProduct(models.Model):
 
 
 def collect_image_path(instance, filename):
-    return f'{instance.product.provider_category_id}/{instance.product.id}/{filename}'
+    return (
+        f'provider/media/{instance.product.provider_category_id}/{instance.product.id}/{filename}'
+    )
 
 
 class ProductImage(models.Model):

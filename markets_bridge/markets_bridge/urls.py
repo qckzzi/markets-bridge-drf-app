@@ -20,6 +20,12 @@ from provider.views import (
     ProviderCharacteristicValueAPIViewSet,
     ScrappedProductAPIViewSet,
 )
+from recipient.views import (
+    RecipientCategoryAPIViewSet,
+    RecipientCharacteristicAPIViewSet,
+    RecipientCharacteristicValueAPIViewSet,
+    RecipientProductTypeAPIViewSet,
+)
 
 
 router = DefaultRouter()
@@ -50,6 +56,22 @@ router.register(
 router.register(
     r'provider_characteristic_values',
     ProviderCharacteristicValueAPIViewSet,
+)
+router.register(
+    r'recipient_categories',
+    RecipientCategoryAPIViewSet,
+)
+router.register(
+    r'recipient_characteristics',
+    RecipientCharacteristicAPIViewSet,
+)
+router.register(
+    r'recipient_characteristic_values',
+    RecipientCharacteristicValueAPIViewSet,
+)
+router.register(
+    r'recipient_product_types',
+    RecipientProductTypeAPIViewSet,
 )
 
 

@@ -7,6 +7,7 @@ from recipient.models import (
     RecipientCharacteristic,
     RecipientCharacteristicValue,
     RecipientMarketplace,
+    RecipientProductType,
 )
 
 
@@ -17,7 +18,12 @@ class RecipientMarketplaceAdmin(admin.ModelAdmin):
 
 @admin.register(RecipientCategory)
 class RecipientCategoryAdmin(admin.ModelAdmin):
-    pass
+    search_fields = ('external_id',)
+
+
+@admin.register(RecipientProductType)
+class RecipientProductTypeAdmin(admin.ModelAdmin):
+    search_fields = ('external_id',)
 
 
 @admin.register(RecipientCharacteristic)

@@ -22,9 +22,6 @@ from provider.serializer import (
     ProviderCharacteristicValueSerializer,
     ScrappedProductSerializer,
 )
-from provider.viewsets import (
-    ProviderViewSet,
-)
 
 
 class ScrappedProductAPIViewSet(ModelViewSet):
@@ -51,7 +48,7 @@ class ProductImageAPIViewSet(ModelViewSet):
     serializer_class = ProductImageSerializer
 
 
-class ProviderCategoryAPIViewSet(ProviderViewSet):
+class ProviderCategoryAPIViewSet(ModelViewSet):
     serializer_class = ProviderCategorySerializer
     queryset = ProviderCategory.objects.all()
 
@@ -60,10 +57,11 @@ class ProviderCategoryAPIViewSet(ProviderViewSet):
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
+        
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 
-class ProviderCharacteristicAPIViewSet(ProviderViewSet):
+class ProviderCharacteristicAPIViewSet(ModelViewSet):
     serializer_class = ProviderCharacteristicSerializer
     queryset = ProviderCharacteristic.objects.all()
 
@@ -75,14 +73,21 @@ class ProviderCharacteristicAPIViewSet(ProviderViewSet):
             try:
                 for external_id in external_category_ids:
                     provider_category = ProviderCategory.objects.get(
-                        external_id=external_id)
+                        external_id=external_id,
+                    )
                     existing_category_ids.append(provider_category.id)
             except ProviderCategory.DoesNotExist:
                 return Response(
                     {'error': 'Категория не найдена'},
-                    status=status.HTTP_400_BAD_REQUEST
+                    status=status.HTTP_400_BAD_REQUEST,
                 )
-            request.data[char_number]['provider_category'] =  existing_category_ids
+            except ProviderCategory.MultipleObjectsReturned:
+                return Response(
+                    {'error': 'Найдено несколько категорий с указанным external_id'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            request.data[char_number]['provider_category'] = existing_category_ids
 
         serializer = self.get_serializer(data=request.data, many=True)
         serializer.is_valid(raise_exception=True)
@@ -92,7 +97,7 @@ class ProviderCharacteristicAPIViewSet(ProviderViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 
-class ProviderCharacteristicValueAPIViewSet(ProviderViewSet):
+class ProviderCharacteristicValueAPIViewSet(ModelViewSet):
     serializer_class = ProviderCharacteristicValueSerializer
     queryset = ProviderCharacteristicValue.objects.all()
 
@@ -105,9 +110,14 @@ class ProviderCharacteristicValueAPIViewSet(ProviderViewSet):
                     external_id=external_characteristic_id,
                 )
                 existing_characteristic_id = provider_characteristic.id
-            except ProviderCategory.DoesNotExist:
+            except ProviderCharacteristic.DoesNotExist:
                 return Response(
                     {'error': 'Характеристика не найдена'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            except ProviderCharacteristic.DoesNotExist:
+                return Response(
+                    {'error': 'Найдено несколько характеристик с указанным external_id'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
