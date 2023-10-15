@@ -74,10 +74,9 @@ class RecipientProductType(models.Model):
         db_index=True,
         unique=True,
     )
-    category = models.ForeignKey(
+    category = models.ManyToManyField(
         'recipient.RecipientCategory',
         verbose_name='Категория',
-        on_delete=models.PROTECT,
         related_name='product_types',
     )
 

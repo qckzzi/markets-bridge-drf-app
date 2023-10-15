@@ -28,38 +28,10 @@ class RecipientCategoryAPIViewSet(ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         parent_external_id = request.data.get('parent')
-        try:
-            recipient_category = RecipientCategory.objects.get(
-                external_id=parent_external_id,
-            )
-        except RecipientCategory.DoesNotExist:
-            return Response(
-                {'error': 'Категория не найдена'},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        except RecipientCategory.MultipleObjectsReturned:
-            return Response(
-                {'error': 'Найдено несколько категорий с указанным external_id'},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        
-        request.data['parent'] = recipient_category.id
-
-        return super().create(request, *args, **kwargs)
-
-
-
-class RecipientProductTypeAPIViewSet(ModelViewSet):
-    serializer_class = RecipientProductTypeSerializer
-    queryset = RecipientProductType.objects.all()
-
-    def create(self, request, *args, **kwargs):
-        for char_number, record in enumerate(request.data):
-            external_category_id = record.get('category')
-
+        if parent_external_id:
             try:
                 recipient_category = RecipientCategory.objects.get(
-                    external_id=external_category_id,
+                    external_id=parent_external_id,
                 )
             except RecipientCategory.DoesNotExist:
                 return Response(
@@ -71,8 +43,40 @@ class RecipientProductTypeAPIViewSet(ModelViewSet):
                     {'error': 'Найдено несколько категорий с указанным external_id'},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
+            else:
+                request.data['parent'] = recipient_category.id
+
+        return super().create(request, *args, **kwargs)
+
+
+class RecipientProductTypeAPIViewSet(ModelViewSet):
+    serializer_class = RecipientProductTypeSerializer
+    queryset = RecipientProductType.objects.all()
+
+    def create(self, request, *args, **kwargs):
+        # TODO: Решить косяк с ManyToMany, вместо нескольких категорий, сохраняется одна
+        for char_number, record in enumerate(request.data):
+            external_category_ids = record.get('category')
+            existing_category_ids = []
+
+            try:
+                for external_id in external_category_ids:
+                    recipient_category = RecipientCategory.objects.get(
+                        external_id=external_id,
+                    )
+                    existing_category_ids.append(recipient_category.id)
+            except RecipientCategory.DoesNotExist:
+                return Response(
+                    {'error': 'Категория не найдена'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            except RecipientCategory.MultipleObjectsReturned:
+                return Response(
+                    {'error': 'Найдено несколько категорий с указанным external_id'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
                 
-            request.data[char_number]['category'] = recipient_category.id
+            request.data[char_number]['category'] = existing_category_ids
         
         serializer = self.get_serializer(data=request.data, many=True)
         serializer.is_valid(raise_exception=True)
