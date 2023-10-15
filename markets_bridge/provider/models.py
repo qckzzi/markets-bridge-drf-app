@@ -52,6 +52,13 @@ class ProviderCategory(models.Model):
         on_delete=models.PROTECT,
         related_name='categories',
     )
+    recipient_category = models.ForeignKey(
+        'recipient.RecipientProductType',
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='provider_categories',
+        verbose_name='Категория получателя',
+    )
 
     def __str__(self):
         return f'{self.name} ({self.translated_name or "Перевод отсутствует"})'
@@ -74,12 +81,17 @@ class ProviderCharacteristic(models.Model):
     )
     external_id = models.PositiveIntegerField(
         verbose_name='Внешний id в системе маркетплейса',
+        unique=True,
     )
     provider_category = models.ManyToManyField(
         'provider.ProviderCategory',
         verbose_name='Категории в системе поставщика',
         related_name='characteristics',
     )
+
+    @property
+    def name_and_translate(self):
+        return f'{self.name} ({self.translated_name or "Перевод отсутствует"})'
 
     def __str__(self):
         return f'{self.name} ({self.translated_name or "Перевод отсутствует"})'
@@ -102,6 +114,7 @@ class ProviderCharacteristicValue(models.Model):
     )
     external_id = models.PositiveIntegerField(
         verbose_name='Внешний id в системе поставщика',
+        unique=True,
     )
     provider_characteristic = models.ForeignKey(
         'provider.ProviderCharacteristic',
@@ -134,6 +147,10 @@ class ProductCharacteristicValue(models.Model):
         related_name='product_values',
         verbose_name='Значение характеристики в системе поставщика',
     )
+
+    class Meta:
+        verbose_name = 'Значение характеристики товаров'
+        verbose_name_plural = 'Значения характеристик товаров'
 
 
 class ScrappedProduct(models.Model):
@@ -183,6 +200,7 @@ class ScrappedProduct(models.Model):
     )
     external_id = models.PositiveIntegerField(
         verbose_name='Внешний id в системе поставщика',
+        unique=True,
     )
     provider_category = models.ForeignKey(
         'provider.ProviderCategory',
@@ -197,13 +215,13 @@ class ScrappedProduct(models.Model):
         return f'{self.name} ({self.translated_name or "Перевод отсутствует"})'
 
     class Meta:
-        verbose_name = 'Спаршенный товар'
-        verbose_name_plural = 'Спаршенные товары'
+        verbose_name = 'Товар с системе поставщика'
+        verbose_name_plural = 'Товары с системе поставщика'
 
 
 def collect_image_path(instance, filename):
     return (
-        f'provider/media/{instance.product.provider_category_id}/{instance.product.id}/{filename}'
+        f'{instance.product.provider_category_id}/{instance.product.id}/{filename}'
     )
 
 
@@ -225,19 +243,3 @@ class ProductImage(models.Model):
     class Meta:
         verbose_name = 'Изображение товара'
         verbose_name_plural = 'Изображения товара'
-
-
-def unpack_categories(categories):
-    result = []
-    for category in categories:
-        if category["subCategories"]:
-            result.extend(unpack_categories(category["subCategories"]))
-        else:
-            category_instance = ProviderCategory(
-                external_id=category["id"],
-                name=category["name"],
-                provider_marketplace_id=1,
-            )
-            result.append(category_instance)
-
-    return result

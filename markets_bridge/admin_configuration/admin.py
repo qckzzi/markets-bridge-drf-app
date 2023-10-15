@@ -3,6 +3,6 @@ from django.contrib import (
 )
 
 
-admin.site.site_title = 'Сервис парсинга'
-admin.site.site_header = 'Администрирование парсинга'
+admin.site.site_title = 'Markets bridge'
+admin.site.site_header = 'Markets bridge'
 admin.site.index_title = 'Администрирование'

@@ -29,8 +29,8 @@ class RawCategory(models.Model):
         return self.name
 
     class Meta:
-        verbose_name = 'Сырая категория'
-        verbose_name_plural = 'Сырые категории'
+        verbose_name = 'Категория'
+        verbose_name_plural = 'Категории'
 
 
 class RawProduct(models.Model):
@@ -59,5 +59,5 @@ class RawProduct(models.Model):
         return self.name
 
     class Meta:
-        verbose_name = 'Сырой продукт'
-        verbose_name_plural = 'Сырые продукты'
+        verbose_name = 'Товар'
+        verbose_name_plural = 'Товары'

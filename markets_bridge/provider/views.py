@@ -9,6 +9,7 @@ from rest_framework.viewsets import (
 )
 
 from provider.models import (
+    ProductCharacteristicValue,
     ProductImage,
     ProviderCategory,
     ProviderCharacteristic,
@@ -16,6 +17,7 @@ from provider.models import (
     ScrappedProduct,
 )
 from provider.serializer import (
+    ProductCharacteristicValueSerializer,
     ProductImageSerializer,
     ProviderCategorySerializer,
     ProviderCharacteristicSerializer,
@@ -122,6 +124,40 @@ class ProviderCharacteristicValueAPIViewSet(ModelViewSet):
                 )
 
             request.data[char_value_number]['provider_characteristic'] =  existing_characteristic_id
+
+        serializer = self.get_serializer(data=request.data, many=True)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+
+class ProductCharacteristicValueAPIViewSet(ModelViewSet):
+    serializer_class = ProductCharacteristicValueSerializer
+    queryset = ProductCharacteristicValue.objects.all()
+
+    def create(self, request, *args, **kwargs):
+        for number, record in enumerate(request.data):
+            external_value_id = record.get('provider_characteristic_value')
+
+            try:
+                char_value = ProviderCharacteristicValue.objects.get(
+                    external_id=external_value_id,
+                )
+                char_value_id = char_value.id
+            except ProviderCharacteristicValue.DoesNotExist:
+                return Response(
+                    {'error': 'Характеристика не найдена'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            except ProviderCharacteristicValue.DoesNotExist:
+                return Response(
+                    {'error': 'Найдено несколько характеристик с указанным external_id'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            request.data[number]['provider_characteristic_value'] =  char_value_id
 
         serializer = self.get_serializer(data=request.data, many=True)
         serializer.is_valid(raise_exception=True)

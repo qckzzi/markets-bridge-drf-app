@@ -3,6 +3,7 @@ from rest_framework.serializers import (
 )
 
 from provider.models import (
+    ProductCharacteristicValue,
     ProductImage,
     ProviderCategory,
     ProviderCharacteristic,
@@ -40,3 +41,9 @@ class ProviderCharacteristicValueSerializer(ModelSerializer):
         model = ProviderCharacteristicValue
         fields = '__all__'
 
+
+class ProductCharacteristicValueSerializer(ModelSerializer):
+    class Meta:
+        model = ProductCharacteristicValue
+        fields = '__all__'
+        

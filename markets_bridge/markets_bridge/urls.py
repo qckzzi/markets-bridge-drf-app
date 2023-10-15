@@ -1,3 +1,9 @@
+from django.conf import (
+    settings,
+)
+from django.conf.urls.static import (
+    static,
+)
 from django.contrib import (
     admin,
 )
@@ -14,6 +20,7 @@ from parser_targets.views import (
     RawProductAPI,
 )
 from provider.views import (
+    ProductCharacteristicValueAPIViewSet,
     ProductImageAPIViewSet,
     ProviderCategoryAPIViewSet,
     ProviderCharacteristicAPIViewSet,
@@ -58,6 +65,10 @@ router.register(
     ProviderCharacteristicValueAPIViewSet,
 )
 router.register(
+    r'provider_product_characteristic_values',
+    ProductCharacteristicValueAPIViewSet,
+)
+router.register(
     r'recipient_categories',
     RecipientCategoryAPIViewSet,
 )
@@ -78,4 +89,4 @@ router.register(
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/v1/', include(router.urls)),
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
