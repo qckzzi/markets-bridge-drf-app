@@ -53,7 +53,7 @@ class ProviderCategory(models.Model):
         related_name='categories',
     )
     recipient_category = models.ForeignKey(
-        'recipient.RecipientProductType',
+        'recipient.RecipientCategory',
         on_delete=models.SET_NULL,
         null=True,
         related_name='provider_categories',

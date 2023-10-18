@@ -39,12 +39,9 @@ class RecipientCategory(models.Model):
         db_index=True,
         unique=True,
     )
-    parent = models.ForeignKey(
+    parent_categories = models.ManyToManyField(
         'self',
-        verbose_name='Родительская категория',
-        on_delete=models.PROTECT,
-        related_name='children',
-        null=True,
+        verbose_name='Родительские категории',
     )
     recipient_marketplace = models.ForeignKey(
         'recipient.RecipientMarketplace',
@@ -64,33 +61,6 @@ class RecipientCategory(models.Model):
         verbose_name_plural = 'Категории в системе получателя'
 
 
-class RecipientProductType(models.Model):
-    name = models.CharField(
-        verbose_name='Наименование',
-        max_length=100,
-    )
-    external_id = models.PositiveIntegerField(
-        verbose_name='Внешний id в системе маркетплейса',
-        db_index=True,
-        unique=True,
-    )
-    category = models.ManyToManyField(
-        'recipient.RecipientCategory',
-        verbose_name='Категория',
-        related_name='product_types',
-    )
-
-    def __repr__(self):
-        return f'{self.__str__()} (id: {self.id})'
-
-    def __str__(self):
-        return self.name
-
-    class Meta:
-        verbose_name = 'Тип товара в системе получателя'
-        verbose_name_plural = 'Типы товара в системе получателя'
-
-
 class RecipientCharacteristic(models.Model):
     name = models.CharField(
         verbose_name='Наименование',
@@ -98,6 +68,11 @@ class RecipientCharacteristic(models.Model):
     )
     external_id = models.PositiveIntegerField(
         verbose_name='Внешний id в системе получателя',
+        unique=True,
+    )
+    is_required = models.BooleanField(
+        verbose_name='Обязательная характеристика',
+        default=False,
     )
     recipient_category = models.ManyToManyField(
         'recipient.RecipientCategory',

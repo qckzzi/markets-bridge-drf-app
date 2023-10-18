@@ -28,10 +28,10 @@ from provider.views import (
     ScrappedProductAPIViewSet,
 )
 from recipient.views import (
+    MatchingRecipientCategoriesAPIView,
     RecipientCategoryAPIViewSet,
     RecipientCharacteristicAPIViewSet,
     RecipientCharacteristicValueAPIViewSet,
-    RecipientProductTypeAPIViewSet,
 )
 
 
@@ -80,13 +80,13 @@ router.register(
     r'recipient_characteristic_values',
     RecipientCharacteristicValueAPIViewSet,
 )
-router.register(
-    r'recipient_product_types',
-    RecipientProductTypeAPIViewSet,
-)
 
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/v1/', include(router.urls)),
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    path('api/v1/mathing_recipient_categories/', MatchingRecipientCategoriesAPIView.as_view()),
+]
+
+urlpatterns.extend(static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT))
+

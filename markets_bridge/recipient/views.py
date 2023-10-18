@@ -1,8 +1,14 @@
+from django.db.models import (
+    F,
+)
 from rest_framework import (
     status,
 )
 from rest_framework.response import (
     Response,
+)
+from rest_framework.views import (
+    APIView,
 )
 from rest_framework.viewsets import (
     ModelViewSet,
@@ -12,13 +18,11 @@ from recipient.models import (
     RecipientCategory,
     RecipientCharacteristic,
     RecipientCharacteristicValue,
-    RecipientProductType,
 )
 from recipient.serializers import (
     RecipientCategorySerializer,
     RecipientCharacteristicSerializer,
     RecipientCharacteristicValueSerializer,
-    RecipientProductTypeSerializer,
 )
 
 
@@ -49,76 +53,29 @@ class RecipientCategoryAPIViewSet(ModelViewSet):
         return super().create(request, *args, **kwargs)
 
 
-class RecipientProductTypeAPIViewSet(ModelViewSet):
-    serializer_class = RecipientProductTypeSerializer
-    queryset = RecipientProductType.objects.all()
-
-    def create(self, request, *args, **kwargs):
-        # TODO: Решить косяк с ManyToMany, вместо нескольких категорий, сохраняется одна
-        for char_number, record in enumerate(request.data):
-            external_category_ids = record.get('category')
-            existing_category_ids = []
-
-            try:
-                for external_id in external_category_ids:
-                    recipient_category = RecipientCategory.objects.get(
-                        external_id=external_id,
-                    )
-                    existing_category_ids.append(recipient_category.id)
-            except RecipientCategory.DoesNotExist:
-                return Response(
-                    {'error': 'Категория не найдена'},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-            except RecipientCategory.MultipleObjectsReturned:
-                return Response(
-                    {'error': 'Найдено несколько категорий с указанным external_id'},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-                
-            request.data[char_number]['category'] = existing_category_ids
-        
-        serializer = self.get_serializer(data=request.data, many=True)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
-
 class RecipientCharacteristicAPIViewSet(ModelViewSet):
     serializer_class = RecipientCharacteristicSerializer
     queryset = RecipientCharacteristic.objects.all()
 
     def create(self, request, *args, **kwargs):
+        chars = []
         for char_number, record in enumerate(request.data):
-            external_category_ids = record.get('recipient_category')
-            existing_category_ids = []
+            char = RecipientCharacteristic(
+                name=record.get('name'),
+                external_id=record.get('external_id'),
+            )
+            chars.append(char)
 
-            try:
-                for external_id in external_category_ids:
-                    recipient_category = RecipientCategory.objects.get(
-                        external_id=external_id,
-                    )
-                    existing_category_ids.append(recipient_category.id)
-            except RecipientCategory.DoesNotExist:
-                return Response(
-                    {'error': 'Категория не найдена'},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-            except RecipientCategory.MultipleObjectsReturned:
-                return Response(
-                    {'error': 'Найдено несколько категорий с указанным external_id'},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-            request.data[char_number]['recipient_category'] = existing_category_ids
+        result = RecipientCharacteristic.objects.bulk_create(chars)
 
-        serializer = self.get_serializer(data=request.data, many=True)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
+        for char, raw_char in zip(chars, request.data):
+            existed_categories = RecipientCategory.objects.filter(
+                external_id__in=raw_char['recipient_categories'],
+            )
 
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+            char.recipient_category.set(existed_categories)
+
+        return Response(status=status.HTTP_201_CREATED)
 
 
 class RecipientCharacteristicValueAPIViewSet(ModelViewSet):
@@ -153,3 +110,15 @@ class RecipientCharacteristicValueAPIViewSet(ModelViewSet):
         headers = self.get_success_headers(serializer.data)
 
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+
+class MatchingRecipientCategoriesAPIView(APIView):
+    def get(self, request, format=None):
+        category_ids = RecipientCategory.objects.filter(
+            provider_categories__isnull=False,
+        ).values(
+            'external_id', 
+            category_external_id=F('category__external_id'),
+        )
+
+        return Response(category_ids)

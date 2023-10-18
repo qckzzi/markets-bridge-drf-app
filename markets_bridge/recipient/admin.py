@@ -7,7 +7,6 @@ from recipient.models import (
     RecipientCharacteristic,
     RecipientCharacteristicValue,
     RecipientMarketplace,
-    RecipientProductType,
 )
 
 
@@ -19,21 +18,17 @@ class RecipientMarketplaceAdmin(admin.ModelAdmin):
 @admin.register(RecipientCategory)
 class RecipientCategoryAdmin(admin.ModelAdmin):
     search_fields = ('external_id', 'id')
-    list_display = ('id', 'external_id', 'name', 'parent')
+    list_display = ('id', 'external_id', 'name', 'parent_categories')
 
+    def parent_categories(self, obj):
+        return ', '.join([category.name for category in obj.parent_categories.all()])
 
-@admin.register(RecipientProductType)
-class RecipientProductTypeAdmin(admin.ModelAdmin):
-    list_display = ('id', 'external_id', 'name', 'related_category')
-    search_fields = ('name',)
-
-    def related_category(self, obj):
-        return ', '.join([category.name for category in obj.category.all()])
+    parent_categories.short_description = 'Родительские категории'
 
 
 @admin.register(RecipientCharacteristic)
 class RecipientCharacteristicAdmin(admin.ModelAdmin):
-    pass
+    list_display = ('id', 'external_id', 'name', 'is_required')
 
 
 @admin.register(RecipientCharacteristicValue)
