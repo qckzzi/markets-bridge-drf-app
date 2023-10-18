@@ -118,7 +118,7 @@ class MatchingRecipientCategoriesAPIView(APIView):
             provider_categories__isnull=False,
         ).values(
             'external_id', 
-            category_external_id=F('category__external_id'),
+            category_external_id=F('parent_categories__external_id'),
         )
 
         return Response(category_ids)

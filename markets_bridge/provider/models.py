@@ -31,6 +31,12 @@ class ProviderMarketplace(models.Model):
 
 
 class ProviderCategory(models.Model):
+    external_id = models.PositiveIntegerField(
+        verbose_name='Внешний id в системе маркетплейса',
+        primary_key=True,
+        db_index=True,
+        unique=True,
+    )
     name = models.CharField(
         verbose_name='Наименование',
         max_length=100,
@@ -40,11 +46,6 @@ class ProviderCategory(models.Model):
         max_length=100,
         null=True,
         blank=True,
-    )
-    external_id = models.PositiveIntegerField(
-        verbose_name='Внешний id в системе маркетплейса',
-        db_index=True,
-        unique=True,
     )
     provider_marketplace = models.ForeignKey(
         'provider.ProviderMarketplace',
@@ -60,8 +61,12 @@ class ProviderCategory(models.Model):
         verbose_name='Категория получателя',
     )
 
-    def __str__(self):
+    @property
+    def name_and_translate(self):
         return f'{self.name} ({self.translated_name or "Перевод отсутствует"})'
+
+    def __str__(self):
+        return self.name_and_translate
 
     class Meta:
         verbose_name = 'Категория с системе поставщика'
@@ -69,6 +74,12 @@ class ProviderCategory(models.Model):
 
 
 class ProviderCharacteristic(models.Model):
+    external_id = models.PositiveIntegerField(
+        verbose_name='Внешний id в системе маркетплейса',
+        primary_key=True,
+        unique=True,
+        db_index=True,
+    )
     name = models.CharField(
         verbose_name='Наименование',
         max_length=100,
@@ -78,10 +89,6 @@ class ProviderCharacteristic(models.Model):
         max_length=100,
         null=True,
         blank=True,
-    )
-    external_id = models.PositiveIntegerField(
-        verbose_name='Внешний id в системе маркетплейса',
-        unique=True,
     )
     provider_category = models.ManyToManyField(
         'provider.ProviderCategory',
@@ -94,7 +101,7 @@ class ProviderCharacteristic(models.Model):
         return f'{self.name} ({self.translated_name or "Перевод отсутствует"})'
 
     def __str__(self):
-        return f'{self.name} ({self.translated_name or "Перевод отсутствует"})'
+        return self.name_and_translate
 
     class Meta:
         verbose_name = 'Характеристика товара с системе поставщика'
@@ -123,11 +130,12 @@ class ProviderCharacteristicValue(models.Model):
         related_name='characteristics',
     )
 
-    def __repr__(self):
-        return self.__str__()
+    @property
+    def value_and_translate(self):
+        return f'{self.value} ({self.translated_value or "Перевод отсутствует"})'
 
     def __str__(self):
-        return f'{self.value} ({self.translated_value or "Перевод отсутствует"})'
+        return self.value_and_translate
 
     class Meta:
         verbose_name = 'Значение характеристики в системе поставщика'
@@ -154,6 +162,12 @@ class ProductCharacteristicValue(models.Model):
 
 
 class ScrappedProduct(models.Model):
+    external_id = models.PositiveIntegerField(
+        verbose_name='Внешний id в системе поставщика',
+        primary_key=True,
+        unique=True,
+        db_index=True,
+    )
     name = models.CharField(
         verbose_name='Наименование',
         max_length=100,
@@ -198,10 +212,6 @@ class ScrappedProduct(models.Model):
         verbose_name='Разрешение для экспорта',
         default=False,
     )
-    external_id = models.PositiveIntegerField(
-        verbose_name='Внешний id в системе поставщика',
-        unique=True,
-    )
     provider_category = models.ForeignKey(
         'provider.ProviderCategory',
         verbose_name='Категория в системе поставщика',
@@ -211,8 +221,12 @@ class ScrappedProduct(models.Model):
         related_name='products',
     )
 
-    def __str__(self):
+    @property
+    def name_and_translate(self):
         return f'{self.name} ({self.translated_name or "Перевод отсутствует"})'
+
+    def __str__(self):
+        return self.name_and_translate
 
     class Meta:
         verbose_name = 'Товар с системе поставщика'

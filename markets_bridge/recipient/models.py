@@ -18,9 +18,6 @@ class RecipientMarketplace(models.Model):
         related_name='recipient_marketplaces',
     )
 
-    def __repr__(self):
-        return f'{self.__str__()} (id: {self.id})'
-
     def __str__(self):
         return self.name
 
@@ -30,14 +27,15 @@ class RecipientMarketplace(models.Model):
 
 
 class RecipientCategory(models.Model):
+    external_id = models.PositiveIntegerField(
+        verbose_name='Внешний id в системе маркетплейса',
+        primary_key=True,
+        unique=True,
+        db_index=True,
+    )
     name = models.CharField(
         verbose_name='Наименование',
         max_length=100,
-    )
-    external_id = models.PositiveIntegerField(
-        verbose_name='Внешний id в системе маркетплейса',
-        db_index=True,
-        unique=True,
     )
     parent_categories = models.ManyToManyField(
         'self',
@@ -50,9 +48,6 @@ class RecipientCategory(models.Model):
         related_name='categories',
     )
 
-    def __repr__(self):
-        return f'{self.__str__()} (id: {self.id})'
-
     def __str__(self):
         return self.name
 
@@ -62,13 +57,15 @@ class RecipientCategory(models.Model):
 
 
 class RecipientCharacteristic(models.Model):
+    external_id = models.PositiveIntegerField(
+        verbose_name='Внешний id в системе получателя',
+        primary_key=True,
+        unique=True,
+        db_index=True,
+    )
     name = models.CharField(
         verbose_name='Наименование',
         max_length=100,
-    )
-    external_id = models.PositiveIntegerField(
-        verbose_name='Внешний id в системе получателя',
-        unique=True,
     )
     is_required = models.BooleanField(
         verbose_name='Обязательная характеристика',
@@ -92,12 +89,15 @@ class RecipientCharacteristic(models.Model):
 
 
 class RecipientCharacteristicValue(models.Model):
+    external_id = models.PositiveIntegerField(
+        verbose_name='Внешний id в системе получателя',
+        primary_key=True,
+        unique=True,
+        db_index=True,
+    )
     value = models.CharField(
         verbose_name='Значение',
         max_length=200,
-    )
-    external_id = models.PositiveIntegerField(
-        verbose_name='Внешний id в системе получателя',
     )
     recipient_characteristic = models.ForeignKey(
         'recipient.RecipientCharacteristic',
@@ -105,9 +105,6 @@ class RecipientCharacteristicValue(models.Model):
         on_delete=models.CASCADE,
         related_name='characteristics',
     )
-
-    def __repr__(self):
-        return f'{self.__str__()} (id: {self.id})'
 
     def __str__(self):
         return self.value

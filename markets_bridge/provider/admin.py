@@ -23,37 +23,30 @@ class ProviderMarketplaceAdmin(admin.ModelAdmin):
 
 @admin.register(ProviderCategory)
 class ProviderCategoryAdmin(admin.ModelAdmin):
-    search_fields = ('external_id', 'id', 'name', 'provider_marketplace__name')
-    list_display = ('id', 'external_id', 'name', 'translated_name', 'recipient_category', 'provider_marketplace')
+    list_display = ('external_id', 'name', 'translated_name', 'recipient_category', 'provider_marketplace')
+    list_select_related = True
+    search_fields = ('external_id', 'name', 'provider_marketplace__name')
     raw_id_fields = ('recipient_category',)
 
 
 @admin.register(ProviderCharacteristic)
 class ProviderCharacteristicAdmin(admin.ModelAdmin):
     filter_horizontal = ('provider_category',)
-    list_display = (
-        'id', 
-        'external_id', 
-        'name', 
-        'translated_name', 
-        'related_category',
-    )
+    list_display = ('external_id', 'name', 'translated_name', 'related_category')
+    list_select_related = True
 
-    def related_category(self, obj):
-        return [f'{category[0]} ({category[1]})' for category in obj.provider_category.values_list('name', 'translated_name')]
+    def related_category(self, characteristic):
+        return [
+            f'{category[0]} ({category[1]})'
+            for category in characteristic.provider_category.values_list('name', 'translated_name')
+        ]
 
     related_category.short_description = 'Категории'
 
 @admin.register(ProviderCharacteristicValue)
 class ProviderCharacteristicValueAdmin(admin.ModelAdmin):
-    list_display = (
-        'id', 
-        'external_id', 
-        'value', 
-        'translated_value', 
-        'provider_characteristic',
-    )
-    search_fields = ('external_id',)
+    list_display = ('external_id', 'value', 'translated_value', 'provider_characteristic')
+    search_fields = list_display
 
 
 class ProductImageAdmin(admin.TabularInline):
@@ -82,7 +75,8 @@ class ProductCharacteristicValueAdmin(admin.TabularInline):
 
 @admin.register(ScrappedProduct)
 class ScrappedProductAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'translated_name', 'price', 'currency', 'provider_category', 'status', 'marketplace')
+    list_display = ('name', 'translated_name', 'price', 'currency', 'provider_category', 'status', 'marketplace')
+    search_fields = ('name', 'translated_name', 'description', 'translated_description', 'provider_category__name')
     readonly_fields = ('currency', 'import_date', 'update_date', 'upload_date', 'external_id')
     fields = (
         ('name', 'translated_name'),
