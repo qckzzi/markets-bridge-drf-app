@@ -1,16 +1,17 @@
 from django.contrib import (
     admin,
 )
-from django.contrib.admin.sites import (
-    site,
-)
-from django.contrib.admin.widgets import (
-    ForeignKeyRawIdWidget,
-)
 
 from common.models import (
     Currency,
+    Marketplace,
+    SystemSettingConfig,
 )
+
+
+@admin.register(Marketplace)
+class MarketplaceAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'url', 'currency', 'type')
 
 
 @admin.register(Currency)
@@ -18,6 +19,7 @@ class CurrencyAdmin(admin.ModelAdmin):
     pass
 
 
-# @admin.register(CategoryMatching)
-# class CategoryMatchingAdmin(admin.ModelAdmin):
-#     raw_id_fields = ('provider_category', 'recipient_category')
+@admin.register(SystemSettingConfig)
+class SystemSettingConfigAdmin(admin.ModelAdmin):
+    list_display = ('__str__', 'is_selected')
+    list_editable = ('is_selected',)

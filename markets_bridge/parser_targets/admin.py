@@ -10,9 +10,11 @@ from parser_targets.models import (
 
 @admin.register(RawCategory)
 class RawCategoryAdmin(admin.ModelAdmin):
-    pass
+    list_display = ('name', 'is_allowed_import', 'marketplace')
+    list_editable = ('is_allowed_import',)
 
 
 @admin.register(RawProduct)
 class RawProductAdmin(admin.ModelAdmin):
-    pass
+    list_display = ('name', 'is_allowed_import', 'marketplace')
+    list_editable = ('is_allowed_import',)

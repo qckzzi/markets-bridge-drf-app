@@ -6,47 +6,47 @@ from django.utils.html import (
 )
 
 from provider.models import (
-    ProductCharacteristicValue,
+    Category,
+    Characteristic,
+    CharacteristicValue,
+    Product,
     ProductImage,
-    ProviderCategory,
-    ProviderCharacteristic,
-    ProviderCharacteristicValue,
-    ProviderMarketplace,
-    ScrappedProduct,
+    ProductValue,
 )
 
 
-@admin.register(ProviderMarketplace)
-class ProviderMarketplaceAdmin(admin.ModelAdmin):
-    pass
-
-
-@admin.register(ProviderCategory)
-class ProviderCategoryAdmin(admin.ModelAdmin):
-    list_display = ('external_id', 'name', 'translated_name', 'recipient_category', 'provider_marketplace')
-    list_select_related = True
-    search_fields = ('external_id', 'name', 'provider_marketplace__name')
+@admin.register(Category)
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ('external_id', 'name', 'translated_name', 'recipient_category', 'marketplace')
+    search_fields = ('external_id', 'name', 'translated_name',)
     raw_id_fields = ('recipient_category',)
 
 
-@admin.register(ProviderCharacteristic)
-class ProviderCharacteristicAdmin(admin.ModelAdmin):
-    filter_horizontal = ('provider_category',)
-    list_display = ('external_id', 'name', 'translated_name', 'related_category')
-    list_select_related = True
+@admin.register(Characteristic)
+class CharacteristicAdmin(admin.ModelAdmin):
+    filter_horizontal = ('categories',)
+    list_display = ('external_id', 'name', 'translated_name', 'is_required')
+    search_fields = ('external_id', 'name', 'translated_name')
+    raw_id_fields = ('recipient_characteristic',)
 
-    def related_category(self, characteristic):
-        return [
-            f'{category[0]} ({category[1]})'
-            for category in characteristic.provider_category.values_list('name', 'translated_name')
-        ]
 
-    related_category.short_description = 'Категории'
+@admin.register(CharacteristicValue)
+class CharacteristicValueAdmin(admin.ModelAdmin):
+    list_display = ('external_id', 'value', 'translated_value', 'characteristic')
+    search_fields = ('external_id', 'value', 'translated_value')
+    raw_id_fields = ('recipient_characteristic_value',)
 
-@admin.register(ProviderCharacteristicValue)
-class ProviderCharacteristicValueAdmin(admin.ModelAdmin):
-    list_display = ('external_id', 'value', 'translated_value', 'provider_characteristic')
-    search_fields = list_display
+
+class ProductValueAdmin(admin.TabularInline):
+    fields = ('value_characteristic', 'value')
+    readonly_fields = fields
+    model = ProductValue
+    extra = 0
+
+    def value_characteristic(self, product_value):
+        return product_value.value.characteristic
+
+    value_characteristic.short_description = 'Характеристика'
 
 
 class ProductImageAdmin(admin.TabularInline):
@@ -61,44 +61,38 @@ class ProductImageAdmin(admin.TabularInline):
     image_preview.allow_tags = True
 
 
-class ProductCharacteristicValueAdmin(admin.TabularInline):
-    model = ProductCharacteristicValue
-    raw_id_fields = ('provider_characteristic_value',)
-    fields = ('provider_characteristic', 'provider_characteristic_value')
-    readonly_fields = ('provider_characteristic',)
-    extra = 0
-
-    def provider_characteristic(self, product_char_value):
-        return product_char_value.provider_characteristic_value.provider_characteristic.name_and_translate
-    
-    provider_characteristic.short_description = 'Характеристика'
-
-@admin.register(ScrappedProduct)
-class ScrappedProductAdmin(admin.ModelAdmin):
-    list_display = ('name', 'translated_name', 'price', 'currency', 'provider_category', 'status', 'marketplace')
+@admin.register(Product)
+class ProductAdmin(admin.ModelAdmin):
+    list_display = ('preview_image', 'name', 'translated_name', 'price', 'currency', 'category', 'status', 'marketplace')
     search_fields = ('name', 'translated_name', 'description', 'translated_description', 'provider_category__name')
-    readonly_fields = ('currency', 'import_date', 'update_date', 'upload_date', 'external_id')
+    readonly_fields = ('currency', 'import_date', 'update_date', 'upload_date', 'external_id', 'characteristic_values', 'url')
     fields = (
+        'external_id',
         ('name', 'translated_name'),
-        ('price', 'currency'),
-        ('description', 'translated_description'),
+        'url',
+        ('price', 'discounted_price', 'currency'),
         'import_date', 
         'update_date', 
         'upload_date',
         'status',
-        'provider_category',
-        'external_id',
+        'category',
     )
+    filter_horizontal = ('characteristic_values',)
     list_editable = ('status',)
-    inlines = (ProductImageAdmin, ProductCharacteristicValueAdmin)
+    inlines = (ProductImageAdmin, ProductValueAdmin)
 
     def currency(self, product):
-        return product.provider_category.provider_marketplace.currency.name
+        return product.category.marketplace.currency.name
     
     currency.short_description = 'Валюта'
 
     def marketplace(self, product):
-        return product.provider_category.provider_marketplace.name
+        return product.category.marketplace.name
 
     marketplace.short_description = 'Поставщик'
+
+    def preview_image(self, product):
+        return mark_safe(f'<img src = "{product.images.first().image.url}" width="100"/>')
+
+    preview_image.short_description = 'Изображение'
 

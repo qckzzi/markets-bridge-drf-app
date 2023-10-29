@@ -3,18 +3,17 @@ from rest_framework.serializers import (
 )
 
 from provider.models import (
-    ProductCharacteristicValue,
+    Category,
+    Characteristic,
+    CharacteristicValue,
+    Product,
     ProductImage,
-    ProviderCategory,
-    ProviderCharacteristic,
-    ProviderCharacteristicValue,
-    ScrappedProduct,
 )
 
 
-class ScrappedProductSerializer(ModelSerializer):
+class ProductSerializer(ModelSerializer):
     class Meta:
-        model = ScrappedProduct
+        model = Product
         fields = '__all__'
 
 
@@ -24,26 +23,19 @@ class ProductImageSerializer(ModelSerializer):
         fields = '__all__'
 
 
-class ProviderCategorySerializer(ModelSerializer):
+class CategorySerializer(ModelSerializer):
     class Meta:
-        model = ProviderCategory
+        model = Category
         fields = '__all__'
 
 
-class ProviderCharacteristicSerializer(ModelSerializer):
+class CharacteristicSerializer(ModelSerializer):
     class Meta:
-        model = ProviderCharacteristic
+        model = Characteristic
         fields = '__all__'
 
 
-class ProviderCharacteristicValueSerializer(ModelSerializer):
+class CharacteristicValueSerializer(ModelSerializer):
     class Meta:
-        model = ProviderCharacteristicValue
+        model = CharacteristicValue
         fields = '__all__'
-
-
-class ProductCharacteristicValueSerializer(ModelSerializer):
-    class Meta:
-        model = ProductCharacteristicValue
-        fields = '__all__'
-        

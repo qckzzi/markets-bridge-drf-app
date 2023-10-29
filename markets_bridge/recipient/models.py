@@ -3,34 +3,9 @@ from django.db import (
 )
 
 
-class RecipientMarketplace(models.Model):
-    name = models.CharField(
-        verbose_name='Наименование',
-        max_length=100,
-    )
-    url = models.URLField(
-        verbose_name='URL маркетплейса',
-    )
-    currency = models.ForeignKey(
-        'common.Currency',
-        verbose_name='Валюта',
-        on_delete=models.PROTECT,
-        related_name='recipient_marketplaces',
-    )
-
-    def __str__(self):
-        return self.name
-
-    class Meta:
-        verbose_name = 'Маркетплейс-получатель'
-        verbose_name_plural = 'Маркетплейсы-получатели'
-
-
-class RecipientCategory(models.Model):
+class Category(models.Model):
     external_id = models.PositiveIntegerField(
         verbose_name='Внешний id в системе маркетплейса',
-        primary_key=True,
-        unique=True,
         db_index=True,
     )
     name = models.CharField(
@@ -40,12 +15,15 @@ class RecipientCategory(models.Model):
     parent_categories = models.ManyToManyField(
         'self',
         verbose_name='Родительские категории',
+        related_name='children',
+        symmetrical=False,
+        blank=True,
     )
-    recipient_marketplace = models.ForeignKey(
-        'recipient.RecipientMarketplace',
+    marketplace = models.ForeignKey(
+        'common.Marketplace',
         verbose_name='Маркетплейс-получатель',
         on_delete=models.PROTECT,
-        related_name='categories',
+        related_name='recipient_categories',
     )
 
     def __str__(self):
@@ -56,11 +34,9 @@ class RecipientCategory(models.Model):
         verbose_name_plural = 'Категории в системе получателя'
 
 
-class RecipientCharacteristic(models.Model):
+class Characteristic(models.Model):
     external_id = models.PositiveIntegerField(
         verbose_name='Внешний id в системе получателя',
-        primary_key=True,
-        unique=True,
         db_index=True,
     )
     name = models.CharField(
@@ -71,8 +47,8 @@ class RecipientCharacteristic(models.Model):
         verbose_name='Обязательная характеристика',
         default=False,
     )
-    recipient_category = models.ManyToManyField(
-        'recipient.RecipientCategory',
+    categories = models.ManyToManyField(
+        'recipient.Category',
         verbose_name='Категории в системе получателя',
         related_name='characteristics',
     )
@@ -88,22 +64,20 @@ class RecipientCharacteristic(models.Model):
         verbose_name_plural = 'Характеристики товара в системе получателя'
 
 
-class RecipientCharacteristicValue(models.Model):
+class CharacteristicValue(models.Model):
     external_id = models.PositiveIntegerField(
         verbose_name='Внешний id в системе получателя',
-        primary_key=True,
-        unique=True,
         db_index=True,
     )
     value = models.CharField(
         verbose_name='Значение',
         max_length=200,
     )
-    recipient_characteristic = models.ForeignKey(
-        'recipient.RecipientCharacteristic',
+    characteristic = models.ForeignKey(
+        'recipient.Characteristic',
         verbose_name='Характеристика в системе получателя',
         on_delete=models.CASCADE,
-        related_name='characteristics',
+        related_name='characteristic_values',
     )
 
     def __str__(self):

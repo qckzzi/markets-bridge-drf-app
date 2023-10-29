@@ -1,27 +1,37 @@
+from rest_framework.fields import (
+    IntegerField,
+)
 from rest_framework.serializers import (
+    ALL_FIELDS,
     ModelSerializer,
+    Serializer,
 )
 
 from recipient.models import (
-    RecipientCategory,
-    RecipientCharacteristic,
-    RecipientCharacteristicValue,
+    Category,
+    Characteristic,
+    CharacteristicValue,
 )
 
 
-class RecipientCategorySerializer(ModelSerializer):
+class CategorySerializer(ModelSerializer):
     class Meta:
-        model = RecipientCategory
-        fields = '__all__'
+        model = Category
+        fields = ALL_FIELDS
 
 
-class RecipientCharacteristicSerializer(ModelSerializer):
+class RelevantCategorySerializer(Serializer):
+    external_id = IntegerField()
+    parent_external_id = IntegerField()
+
+
+class CharacteristicSerializer(ModelSerializer):
     class Meta:
-        model = RecipientCharacteristic
-        fields = '__all__'
+        model = Characteristic
+        fields = ALL_FIELDS
 
 
-class RecipientCharacteristicValueSerializer(ModelSerializer):
+class CharacteristicValueSerializer(ModelSerializer):
     class Meta:
-        model = RecipientCharacteristicValue
-        fields = '__all__'
+        model = CharacteristicValue
+        fields = ALL_FIELDS

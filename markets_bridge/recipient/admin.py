@@ -3,35 +3,39 @@ from django.contrib import (
 )
 
 from recipient.models import (
-    RecipientCategory,
-    RecipientCharacteristic,
-    RecipientCharacteristicValue,
-    RecipientMarketplace,
+    Category,
+    Characteristic,
+    CharacteristicValue,
 )
 
 
-@admin.register(RecipientMarketplace)
-class RecipientMarketplaceAdmin(admin.ModelAdmin):
-    pass
-
-
-@admin.register(RecipientCategory)
-class RecipientCategoryAdmin(admin.ModelAdmin):
-    list_display = ('external_id', 'name', 'parent_categories')
+@admin.register(Category)
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ('external_id', 'name', 'parents')
     search_fields = ('external_id', 'name')
 
-    def parent_categories(self, obj):
-        return ', '.join([category.name for category in obj.parent_categories.all()])
+    def get_queryset(self, request):
+        return super().get_queryset(request).filter(children__isnull=True)
 
-    parent_categories.short_description = 'Родительские категории'
+    def parents(self, category):
+        return ', '.join(category.parent_categories.values_list('name', flat=True))
 
-
-@admin.register(RecipientCharacteristic)
-class RecipientCharacteristicAdmin(admin.ModelAdmin):
-    list_display = ('external_id', 'name', 'is_required')
-    search_fields = list_display
+    parents.short_description = 'Родительские категории'
 
 
-@admin.register(RecipientCharacteristicValue)
-class RecipientCharacteristicValueAdmin(admin.ModelAdmin):
-    pass
+@admin.register(Characteristic)
+class CharacteristicAdmin(admin.ModelAdmin):
+    list_display = ('external_id', 'name', 'is_required', 'categories_name')
+    search_fields = ('external_id', 'name', 'is_required', 'categories__name')
+    readonly_fields = ('categories',)
+
+    def categories_name(self, characteristic):
+        return ', '.join(characteristic.categories.values_list('name', flat=True))
+
+    categories_name.short_description = 'Категории'
+
+
+@admin.register(CharacteristicValue)
+class CharacteristicValueAdmin(admin.ModelAdmin):
+    list_display = ('external_id', 'characteristic', 'value')
+    search_fields = ('external_id', 'characteristic__name', 'value')

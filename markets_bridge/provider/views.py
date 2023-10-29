@@ -1,5 +1,11 @@
+from django.db.models import (
+    Q,
+)
 from rest_framework import (
     status,
+)
+from rest_framework.decorators import (
+    action,
 )
 from rest_framework.response import (
     Response,
@@ -9,40 +15,55 @@ from rest_framework.viewsets import (
 )
 
 from provider.models import (
-    ProductCharacteristicValue,
+    Category,
+    Characteristic,
+    CharacteristicValue,
+    Product,
     ProductImage,
-    ProviderCategory,
-    ProviderCharacteristic,
-    ProviderCharacteristicValue,
-    ScrappedProduct,
 )
 from provider.serializer import (
-    ProductCharacteristicValueSerializer,
+    CategorySerializer,
+    CharacteristicSerializer,
+    CharacteristicValueSerializer,
     ProductImageSerializer,
-    ProviderCategorySerializer,
-    ProviderCharacteristicSerializer,
-    ProviderCharacteristicValueSerializer,
-    ScrappedProductSerializer,
+    ProductSerializer,
+)
+from provider.services import (
+    create_or_update_product,
+    get_or_create_category,
+    get_or_create_characteristic_value,
+    update_or_create_characteristic,
 )
 
 
-class ScrappedProductAPIViewSet(ModelViewSet):
-    queryset = ScrappedProduct.objects.all()
-    serializer_class = ScrappedProductSerializer
+class ProductAPIViewSet(ModelViewSet):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
 
     def create(self, request, *args, **kwargs):
-        external_id = request.data.get('provider_category_external_id')
+        product, is_new = create_or_update_product(request.data)
+        serializer = self.get_serializer(product)
 
-        try:
-            provider_category = ProviderCategory.objects.get(external_id=external_id)
-        except ProviderCategory.DoesNotExist:
-            return Response(
-                {'error': 'Категория не найдена'}, status=status.HTTP_400_BAD_REQUEST
-            )
+        if is_new:
+            http_status = status.HTTP_201_CREATED
+        else:
+            http_status = status.HTTP_200_OK
 
-        request.data['provider_category'] = provider_category.id
+        return Response(status=http_status, data=serializer.data)
 
-        return super().create(request, *args, **kwargs)
+    # TODO: Вместо этого эндпоинта сделать команду отправки непереведенных записей к сервису перевода
+    @action(detail=False, methods=('GET',))
+    def random_untranslated(self, request):
+
+        untranslated_product = self.get_queryset().filter(
+            Q(translated_name='') | Q(translated_name__isnull=True),
+        ).order_by(
+            '-update_date',
+        ).first()
+
+        serializer = self.get_serializer(untranslated_product)
+
+        return Response(serializer.data)
 
 
 class ProductImageAPIViewSet(ModelViewSet):
@@ -50,119 +71,114 @@ class ProductImageAPIViewSet(ModelViewSet):
     serializer_class = ProductImageSerializer
 
 
-class ProviderCategoryAPIViewSet(ModelViewSet):
-    serializer_class = ProviderCategorySerializer
-    queryset = ProviderCategory.objects.all()
+class CategoryAPIViewSet(ModelViewSet):
+    serializer_class = CategorySerializer
+    queryset = Category.objects.all()
+    
+    def create(self, request, *args, **kwargs):
+        category, is_new = get_or_create_category(request.data)
+
+        if is_new:
+            serializer = self.get_serializer(category)
+            response = Response(status=status.HTTP_201_CREATED, data=serializer.data)
+        else:
+            response = Response(
+                data={'message': f'The "{category.name}" category already exists.'},
+                status=status.HTTP_200_OK,
+            )
+
+        return response
+
+    # TODO: Вместо этого эндпоинта сделать команду отправки непереведенных записей к сервису перевода
+    @action(detail=False, methods=('GET',))
+    def random_untranslated(self, request):
+
+        untranslated_category = self.get_queryset().filter(
+            Q(translated_name='') | Q(translated_name__isnull=True),
+        ).order_by(
+            '-products',
+            '?',
+        ).first()
+
+        serializer = self.get_serializer(untranslated_category)
+
+        return Response(serializer.data)
+
+    # TODO: Вместо этого эндпоинта сделать команду отправки запроса с категориями к сервису Ozon-inloader
+    @action(detail=False, methods=('GET',))
+    def with_products(self, requests):
+        categories = self.get_queryset().filter(
+            products__isnull=False,
+        )
+
+        serializer = self.get_serializer(categories, many=True)
+
+        return Response(serializer.data)
+
+
+class CharacteristicAPIViewSet(ModelViewSet):
+    serializer_class = CharacteristicSerializer
+    queryset = Characteristic.objects.all()
 
     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data, many=True)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        characteristic, is_new = update_or_create_characteristic(request.data)
+
+        if is_new:
+            serializer = self.get_serializer(characteristic)
+            response = Response(data=serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            response = Response(
+                data={'message': f'The "{characteristic.name}" characteristic already exists.'},
+                status=status.HTTP_200_OK,
+            )
+
+        return response
+
+    # TODO: Вместо этого эндпоинта сделать команду отправки непереведенных записей к сервису перевода
+    @action(detail=False, methods=('GET',))
+    def random_untranslated(self, request):
+
+        untranslated_characteristic = self.get_queryset().filter(
+            Q(translated_name='') | Q(translated_name__isnull=True),
+        ).order_by(
+            '-categories__products',
+            '?',
+        ).first()
+
+        serializer = self.get_serializer(untranslated_characteristic)
+
+        return Response(serializer.data)
 
 
-class ProviderCharacteristicAPIViewSet(ModelViewSet):
-    serializer_class = ProviderCharacteristicSerializer
-    queryset = ProviderCharacteristic.objects.all()
-
-    def create(self, request, *args, **kwargs):
-        for char_number, record in enumerate(request.data):
-            external_category_ids = record.get('provider_category')
-            existing_category_ids = []
-
-            try:
-                for external_id in external_category_ids:
-                    provider_category = ProviderCategory.objects.get(
-                        external_id=external_id,
-                    )
-                    existing_category_ids.append(provider_category.id)
-            except ProviderCategory.DoesNotExist:
-                return Response(
-                    {'error': 'Категория не найдена'},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-            except ProviderCategory.MultipleObjectsReturned:
-                return Response(
-                    {'error': 'Найдено несколько категорий с указанным external_id'},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-
-            request.data[char_number]['provider_category'] = existing_category_ids
-
-        serializer = self.get_serializer(data=request.data, many=True)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
-
-class ProviderCharacteristicValueAPIViewSet(ModelViewSet):
-    serializer_class = ProviderCharacteristicValueSerializer
-    queryset = ProviderCharacteristicValue.objects.all()
+class CharacteristicValueAPIViewSet(ModelViewSet):
+    serializer_class = CharacteristicValueSerializer
+    queryset = CharacteristicValue.objects.all()
 
     def create(self, request, *args, **kwargs):
-        for char_value_number, record in enumerate(request.data):
-            external_characteristic_id = record.get('provider_characteristic')
+        characteristic_value, is_new = get_or_create_characteristic_value(request.data)
 
-            try:
-                provider_characteristic = ProviderCharacteristic.objects.get(
-                    external_id=external_characteristic_id,
-                )
-                existing_characteristic_id = provider_characteristic.id
-            except ProviderCharacteristic.DoesNotExist:
-                return Response(
-                    {'error': 'Характеристика не найдена'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            except ProviderCharacteristic.DoesNotExist:
-                return Response(
-                    {'error': 'Найдено несколько характеристик с указанным external_id'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
+        if is_new:
+            serializer = self.get_serializer(characteristic_value)
+            response = Response(data=serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            response = Response(
+                data={'message': f'The "{characteristic_value.value}" characteristic value already exists.'},
+                status=status.HTTP_200_OK,
+            )
 
-            request.data[char_value_number]['provider_characteristic'] =  existing_characteristic_id
+        return response
 
-        serializer = self.get_serializer(data=request.data, many=True)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
+    # TODO: Вместо этого эндпоинта сделать команду отправки непереведенных записей к сервису перевода
+    @action(detail=False, methods=('GET',))
+    def random_untranslated(self, request):
 
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        not_translated_values = self.get_queryset().filter(
+            Q(translated_value='') | Q(translated_value__isnull=True),
+        ).order_by(
+            '-characteristic__categories__products',
+            '?',
+        ).first()
 
+        serializer = self.get_serializer(not_translated_values)
 
-class ProductCharacteristicValueAPIViewSet(ModelViewSet):
-    serializer_class = ProductCharacteristicValueSerializer
-    queryset = ProductCharacteristicValue.objects.all()
-
-    def create(self, request, *args, **kwargs):
-        for number, record in enumerate(request.data):
-            external_value_id = record.get('provider_characteristic_value')
-
-            try:
-                char_value = ProviderCharacteristicValue.objects.get(
-                    external_id=external_value_id,
-                )
-                char_value_id = char_value.id
-            except ProviderCharacteristicValue.DoesNotExist:
-                return Response(
-                    {'error': 'Характеристика не найдена'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            except ProviderCharacteristicValue.DoesNotExist:
-                return Response(
-                    {'error': 'Найдено несколько характеристик с указанным external_id'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-
-            request.data[number]['provider_characteristic_value'] =  char_value_id
-
-        serializer = self.get_serializer(data=request.data, many=True)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
+        return Response(serializer.data)

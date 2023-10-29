@@ -15,8 +15,8 @@ class RawCategory(models.Model):
         verbose_name='Разрешение для импорта',
         default=False,
     )
-    provider_marketplace = models.ForeignKey(
-        'provider.ProviderMarketplace',
+    marketplace = models.ForeignKey(
+        'common.Marketplace',
         on_delete=models.CASCADE,
         related_name='raw_categories',
         verbose_name='Маркетплейс-поставщик',
@@ -45,8 +45,8 @@ class RawProduct(models.Model):
         verbose_name='Разрешение для импорта',
         default=False,
     )
-    provider_marketplace = models.ForeignKey(
-        'provider.ProviderMarketplace',
+    marketplace = models.ForeignKey(
+        'common.Marketplace',
         on_delete=models.CASCADE,
         related_name='raw_products',
         verbose_name='Маркетплейс-поставщик',
