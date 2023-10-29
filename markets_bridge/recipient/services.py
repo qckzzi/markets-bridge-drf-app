@@ -49,11 +49,11 @@ def update_or_create_characteristic(characteristic_data: dict) -> tuple[Characte
 
     external_id = characteristic_data.get('external_id')
     category_external_ids = characteristic_data.pop('category_external_ids')
-    marketplace_id = characteristic_data.pop('marketplace_id')
+    marketplace_id = characteristic_data.get('marketplace_id')
 
     characteristic, is_new = Characteristic.objects.get_or_create(
         external_id=external_id,
-        categories__marketplace_id=marketplace_id,
+        marketplace_id=marketplace_id,
         defaults=characteristic_data,
     )
 
@@ -75,22 +75,19 @@ def update_or_create_characteristic_value(value_data: dict) -> tuple[Characteris
 
     external_id = value_data.get('external_id')
     characteristic_external_id = value_data.pop('characteristic_external_id')
-    marketplace_id = value_data.pop('marketplace_id')
+    marketplace_id = value_data.get('marketplace_id')
 
-    # TODO: Использовать get_object_or_404
-    characteristic = Characteristic.objects.filter(
+    characteristic = get_object_or_404(
+        Characteristic,
         external_id=characteristic_external_id,
-        categories__marketplace_id=marketplace_id,
-    ).distinct()
+        marketplace_id=marketplace_id,
+    )
 
-    if not characteristic.exists():
-        raise Http404('Characteristic not found')
-
-    value_data['characteristic_id'] = characteristic.get().id
+    value_data['characteristic_id'] = characteristic.id
 
     characteristic_value, is_new = CharacteristicValue.objects.get_or_create(
         external_id=external_id,
-        characteristic__categories__marketplace_id=marketplace_id,
+        marketplace_id=marketplace_id,
         defaults=value_data,
     )
 

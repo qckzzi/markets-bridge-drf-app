@@ -81,6 +81,12 @@ class Characteristic(models.Model):
         related_name='provider_characteristics',
         verbose_name='Характеристика в системе поставщика',
     )
+    marketplace = models.ForeignKey(
+        'common.Marketplace',
+        verbose_name='Маркетплейс-поставщик',
+        on_delete=models.PROTECT,
+        related_name='provider_characteristics',
+    )
 
     @property
     def name_and_translate(self):
@@ -122,6 +128,12 @@ class CharacteristicValue(models.Model):
         blank=True,
         related_name='provider_characteristic_values',
         verbose_name='Значение характеристики в системе поставщика',
+    )
+    marketplace = models.ForeignKey(
+        'common.Marketplace',
+        verbose_name='Маркетплейс-поставщик',
+        on_delete=models.PROTECT,
+        related_name='provider_characteristic_values',
     )
 
     @property
@@ -207,6 +219,12 @@ class Product(models.Model):
         verbose_name='Значение характеристики в системе поставщика',
         related_name='products',
         through='ProductValue',
+    )
+    marketplace = models.ForeignKey(
+        'common.Marketplace',
+        verbose_name='Маркетплейс-поставщик',
+        on_delete=models.PROTECT,
+        related_name='provider_products',
     )
 
     @property
