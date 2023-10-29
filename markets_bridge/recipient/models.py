@@ -27,7 +27,7 @@ class Category(models.Model):
     )
 
     def __str__(self):
-        return self.name
+        return f'{self.external_id}, {self.name}'
 
     class Meta:
         verbose_name = 'Категория в системе получателя'
@@ -43,10 +43,26 @@ class Characteristic(models.Model):
         verbose_name='Наименование',
         max_length=100,
     )
+    # description = models.TextField(
+    #     null=True,
+    #     blank=True,
+    # )
     is_required = models.BooleanField(
         verbose_name='Обязательная характеристика',
         default=False,
     )
+    # is_aspect = models.BooleanField(
+    #     verbose_name='Аспектный атрибут',
+    #     default=False,
+    # )
+    # is_collection = models.BooleanField(
+    #     verbose_name='Является набором значений',
+    #     default=False,
+    # )
+    # dictionary_id = models.PositiveIntegerField(
+    #     verbose_name='Идентификатор справочника в системе получателя',
+    #     default=0,
+    # )
     categories = models.ManyToManyField(
         'recipient.Category',
         verbose_name='Категории в системе получателя',

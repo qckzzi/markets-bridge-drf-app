@@ -13,6 +13,7 @@ from recipient.models import (
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ('external_id', 'name', 'parents')
     search_fields = ('external_id', 'name')
+    readonly_fields = ('parent_categories',)
 
     def get_queryset(self, request):
         return super().get_queryset(request).filter(children__isnull=True)
@@ -28,6 +29,7 @@ class CharacteristicAdmin(admin.ModelAdmin):
     list_display = ('external_id', 'name', 'is_required', 'categories_name')
     search_fields = ('external_id', 'name', 'is_required', 'categories__name')
     readonly_fields = ('categories',)
+    list_filter = ('is_required',)
 
     def categories_name(self, characteristic):
         return ', '.join(characteristic.categories.values_list('name', flat=True))

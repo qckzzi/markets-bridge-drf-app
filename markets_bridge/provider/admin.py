@@ -2,7 +2,11 @@ from django.contrib import (
     admin,
 )
 from django.utils.html import (
+    format_html,
     mark_safe,
+)
+from rest_framework.reverse import (
+    reverse,
 )
 
 from provider.models import (
@@ -64,8 +68,8 @@ class ProductImageAdmin(admin.TabularInline):
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
     list_display = ('preview_image', 'name', 'translated_name', 'price', 'currency', 'category', 'status', 'marketplace')
-    search_fields = ('name', 'translated_name', 'description', 'translated_description', 'provider_category__name')
-    readonly_fields = ('currency', 'import_date', 'update_date', 'upload_date', 'external_id', 'characteristic_values', 'url')
+    search_fields = ('name', 'translated_name', 'description', 'translated_description', 'category__name')
+    readonly_fields = ('currency', 'import_date', 'update_date', 'upload_date', 'external_id', 'characteristic_values', 'url', 'custom_button')
     fields = (
         'external_id',
         ('name', 'translated_name'),
@@ -76,6 +80,7 @@ class ProductAdmin(admin.ModelAdmin):
         'upload_date',
         'status',
         'category',
+        'custom_button',
     )
     filter_horizontal = ('characteristic_values',)
     list_editable = ('status',)
@@ -95,4 +100,14 @@ class ProductAdmin(admin.ModelAdmin):
         return mark_safe(f'<img src = "{product.images.first().image.url}" width="100"/>')
 
     preview_image.short_description = 'Изображение'
+
+    def custom_button(self, product):
+        if product.category.recipient_category:
+            url = reverse('admin:provider_product_changelist') + '?id=2'
+
+            return format_html(f'<a href="{url}" class="button" target="_blank">Сопоставить характеристики</a>')
+        else:
+            return format_html('')
+
+    custom_button.short_description = ''
 

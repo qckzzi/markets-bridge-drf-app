@@ -65,6 +65,11 @@ class ProductAPIViewSet(ModelViewSet):
 
         return Response(serializer.data)
 
+    # TODO: Написать вместо этого логику получения нужных данных в сервисе ozon-outloader
+    # @action(detail=False, methods=('GET',))
+    # def for_ozon(self, request):
+    #
+
 
 class ProductImageAPIViewSet(ModelViewSet):
     queryset = ProductImage.objects.all()
