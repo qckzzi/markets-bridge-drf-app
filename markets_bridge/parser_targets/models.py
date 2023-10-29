@@ -1,4 +1,6 @@
-from django.db import models
+from django.db import (
+    models,
+)
 
 
 class RawCategory(models.Model):
@@ -9,15 +11,15 @@ class RawCategory(models.Model):
     url = models.URLField(
         verbose_name='URL товара',
     )
-    status = models.BooleanField(
+    is_allowed_import = models.BooleanField(
         verbose_name='Разрешение для импорта',
+        default=False,
     )
-    provider_category = models.ForeignKey(
-        'provider.ProviderCategory',
-        verbose_name='Категория в системе поставщика',
-        null=True,
-        on_delete=models.SET_NULL,
-        related_name='row_categories',
+    marketplace = models.ForeignKey(
+        'common.Marketplace',
+        on_delete=models.CASCADE,
+        related_name='raw_categories',
+        verbose_name='Маркетплейс-поставщик',
     )
 
     def __repr__(self):
@@ -27,8 +29,8 @@ class RawCategory(models.Model):
         return self.name
 
     class Meta:
-        verbose_name = 'Сырая категория'
-        verbose_name_plural = 'Сырые категории'
+        verbose_name = 'Категория'
+        verbose_name_plural = 'Категории'
 
 
 class RawProduct(models.Model):
@@ -39,15 +41,15 @@ class RawProduct(models.Model):
     url = models.URLField(
         verbose_name='URL товара',
     )
-    status = models.BooleanField(
+    is_allowed_import = models.BooleanField(
         verbose_name='Разрешение для импорта',
+        default=False,
     )
-    raw_category = models.ForeignKey(
-        'parser_targets.RawCategory',
-        verbose_name='Сырая категория',
-        null=True,
-        on_delete=models.SET_NULL,
+    marketplace = models.ForeignKey(
+        'common.Marketplace',
+        on_delete=models.CASCADE,
         related_name='raw_products',
+        verbose_name='Маркетплейс-поставщик',
     )
 
     def __repr__(self):
@@ -57,5 +59,5 @@ class RawProduct(models.Model):
         return self.name
 
     class Meta:
-        verbose_name = 'Сырой продукт'
-        verbose_name_plural = 'Сырые продукты'
+        verbose_name = 'Товар'
+        verbose_name_plural = 'Товары'

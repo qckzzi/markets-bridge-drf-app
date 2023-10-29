@@ -1,1 +1,4 @@
 -r REQUIREMENTS.txt
+
+isort==5.12.0
+pre-commit==3.4.0
