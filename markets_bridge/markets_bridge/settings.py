@@ -17,6 +17,12 @@ from pathlib import (
 from django.contrib import (
     admin,
 )
+from dotenv import (
+    load_dotenv,
+)
+
+
+load_dotenv()
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -32,7 +38,8 @@ SECRET_KEY = 'django-insecure-i-r%n!avyo^r88#=w14((r0b1p)oy9l8&x##$9dh)=3ft7*57w
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+DOMAIN = os.getenv('HOST')
+ALLOWED_HOSTS = [DOMAIN, 'localhost']
 
 
 # Application definition
