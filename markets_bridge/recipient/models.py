@@ -52,6 +52,12 @@ class Characteristic(models.Model):
         verbose_name='Категории в системе получателя',
         related_name='characteristics',
     )
+    marketplace = models.ForeignKey(
+        'common.Marketplace',
+        on_delete=models.PROTECT,
+        related_name='recipient_characteristics',
+        verbose_name='Маркетплейс-получатель',
+    )
 
     def __repr__(self):
         return f'{self.__str__()} (id: {self.id})'
@@ -78,6 +84,12 @@ class CharacteristicValue(models.Model):
         verbose_name='Характеристика в системе получателя',
         on_delete=models.CASCADE,
         related_name='characteristic_values',
+    )
+    marketplace = models.ForeignKey(
+        'common.Marketplace',
+        on_delete=models.PROTECT,
+        related_name='recipient_characteristic_values',
+        verbose_name='Маркетплейс-получатель',
     )
 
     def __str__(self):
