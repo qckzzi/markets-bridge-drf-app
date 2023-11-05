@@ -66,9 +66,38 @@ class ProductAPIViewSet(ModelViewSet):
         return Response(serializer.data)
 
     # TODO: Написать вместо этого логику получения нужных данных в сервисе ozon-outloader
-    # @action(detail=False, methods=('GET',))
-    # def for_ozon(self, request):
-    #
+    @action(detail=False, methods=('GET',))
+    def for_ozon(self, request):
+        result = []
+
+        for product in self.get_queryset().filter(is_export_allowed=True):
+            host = request.get_host()
+            attributes = []
+            characteristic_values = product.characteristic_values.filter(
+                characteristic__is_required=True,
+            )
+
+            for value in characteristic_values:
+                attributes.append(
+                    dict(
+                        complex_id=0,
+                        id=value.characteristic.recipient_characteristic.external_id,
+                        values=[
+                            dict(
+                                id=value.id,
+                            )
+                        ]
+                    )
+                )
+
+            result.append(
+                dict(
+                    name=product.name,
+                    category_id=product.category_id,
+                    images=[f'{host}/{image_record.image.url}' for image_record in product.images.all()],
+                )
+            )
+            ...
 
 
 class ProductImageAPIViewSet(ModelViewSet):

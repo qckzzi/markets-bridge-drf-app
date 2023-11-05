@@ -11,17 +11,9 @@ from recipient.models import (
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = ('external_id', 'name', 'parents')
+    list_display = ('external_id', 'name', 'parent_category')
     search_fields = ('external_id', 'name')
-    readonly_fields = ('parent_categories',)
-
-    def get_queryset(self, request):
-        return super().get_queryset(request).filter(children__isnull=True)
-
-    def parents(self, category):
-        return ', '.join(category.parent_categories.values_list('name', flat=True))
-
-    parents.short_description = 'Родительские категории'
+    readonly_fields = ('parent_category',)
 
 
 @admin.register(Characteristic)

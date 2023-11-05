@@ -6,6 +6,10 @@ from django.db import (
     models,
 )
 
+from common.models import (
+    CategoryMatching,
+)
+
 
 class Category(models.Model):
     external_id = models.PositiveIntegerField(
@@ -27,14 +31,6 @@ class Category(models.Model):
         verbose_name='Маркетплейс-поставщик',
         on_delete=models.PROTECT,
         related_name='provider_categories',
-    )
-    recipient_category = models.ForeignKey(
-        'recipient.Category',
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='provider_categories',
-        verbose_name='Категория получателя',
     )
 
     @property
@@ -72,14 +68,6 @@ class Characteristic(models.Model):
         'provider.Category',
         verbose_name='Категории в системе поставщика',
         related_name='characteristics',
-    )
-    recipient_characteristic = models.ForeignKey(
-        'recipient.Characteristic',
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='provider_characteristics',
-        verbose_name='Характеристика в системе поставщика',
     )
     marketplace = models.ForeignKey(
         'common.Marketplace',
@@ -120,14 +108,6 @@ class CharacteristicValue(models.Model):
         verbose_name='Характеристика в системе поставщика',
         on_delete=models.CASCADE,
         related_name='characteristic_values',
-    )
-    recipient_characteristic_value = models.ForeignKey(
-        'recipient.CharacteristicValue',
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='provider_characteristic_values',
-        verbose_name='Значение характеристики в системе поставщика',
     )
     marketplace = models.ForeignKey(
         'common.Marketplace',
@@ -202,7 +182,7 @@ class Product(models.Model):
         null=True,
         blank=True,
     )
-    status = models.BooleanField(
+    is_export_allowed = models.BooleanField(
         verbose_name='Разрешение для экспорта',
         default=False,
     )

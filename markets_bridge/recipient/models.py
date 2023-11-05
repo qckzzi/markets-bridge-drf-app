@@ -12,11 +12,12 @@ class Category(models.Model):
         verbose_name='Наименование',
         max_length=100,
     )
-    parent_categories = models.ManyToManyField(
+    parent_category = models.ForeignKey(
         'self',
+        on_delete=models.PROTECT,
         verbose_name='Родительские категории',
         related_name='children',
-        symmetrical=False,
+        null=True,
         blank=True,
     )
     marketplace = models.ForeignKey(
@@ -43,26 +44,19 @@ class Characteristic(models.Model):
         verbose_name='Наименование',
         max_length=100,
     )
-    # description = models.TextField(
-    #     null=True,
-    #     blank=True,
-    # )
+    description = models.TextField(
+        null=True,
+        blank=True,
+        verbose_name='Описание характеристики',
+    )
     is_required = models.BooleanField(
         verbose_name='Обязательная характеристика',
         default=False,
     )
-    # is_aspect = models.BooleanField(
-    #     verbose_name='Аспектный атрибут',
-    #     default=False,
-    # )
-    # is_collection = models.BooleanField(
-    #     verbose_name='Является набором значений',
-    #     default=False,
-    # )
-    # dictionary_id = models.PositiveIntegerField(
-    #     verbose_name='Идентификатор справочника в системе получателя',
-    #     default=0,
-    # )
+    has_reference_values = models.BooleanField(
+        default=False,
+        verbose_name='Имеет ссылочные значения',
+    )
     categories = models.ManyToManyField(
         'recipient.Category',
         verbose_name='Категории в системе получателя',

@@ -17,10 +17,10 @@ from recipient.models import (
 
 
 def update_or_create_category(category_data: dict) -> tuple[Category, bool]:
-    """Создаёт новую категорию, либо обновляет связь с ее родителями."""
+    """Создаёт новую категорию, либо обновляет связь с ее родителем."""
 
     external_id = category_data.get('external_id')
-    parent_category_external_ids = category_data.pop('parent_category_external_ids')
+    parent_category_external_id = category_data.pop('parent_category_external_id')
     marketplace_id = category_data.get('marketplace_id')
 
     category, is_new = Category.objects.get_or_create(
@@ -29,17 +29,17 @@ def update_or_create_category(category_data: dict) -> tuple[Category, bool]:
         defaults=category_data,
     )
 
-    if parent_category_external_ids:
-        parent_categories = Category.objects.filter(
-            external_id__in=parent_category_external_ids,
+    try:
+        parent_category = Category.objects.get(
+            external_id=parent_category_external_id,
             marketplace_id=marketplace_id,
         )
+    except Category.DoesNotExist:
+        parent_category = None
 
-        if is_new:
-            category.parent_categories.set(parent_categories)
-        else:
-            for parent_category in parent_categories:
-                category.parent_categories.add(parent_category)
+    category.parent_category = parent_category
+
+    category.save()
 
     return category, is_new
 
@@ -94,14 +94,13 @@ def update_or_create_characteristic_value(value_data: dict) -> tuple[Characteris
     return characteristic_value, is_new
 
 
-def get_matched_categories() -> QuerySet[Category]:
+def get_matched_category_external_ids() -> QuerySet[Category]:
     """Возвращает категории получателя, сопоставленные с категориями поставщика."""
 
     categories = Category.objects.filter(
-        provider_categories__isnull=False,
+        matchings__isnull=False,
     ).values(
         'external_id',
-        parent_external_id=F('parent_categories__external_id'),
-    )
+    ).distinct()
 
     return categories
