@@ -30,6 +30,7 @@ class Category(models.Model):
     def __str__(self):
         return f'{self.external_id}, {self.name}'
 
+
     class Meta:
         verbose_name = 'Категория в системе получателя'
         verbose_name_plural = 'Категории в системе получателя'
@@ -73,7 +74,7 @@ class Characteristic(models.Model):
         return f'{self.__str__()} (id: {self.id})'
 
     def __str__(self):
-        return self.name
+        return f'{self.name}{"*" if self.is_required else ""}'
 
     class Meta:
         verbose_name = 'Характеристика товара с системе получателя'
@@ -103,7 +104,7 @@ class CharacteristicValue(models.Model):
     )
 
     def __str__(self):
-        return self.value
+        return f'{self.value} ({self.characteristic.name})'
 
     class Meta:
         verbose_name = 'Значение характеристики в системе получателя'

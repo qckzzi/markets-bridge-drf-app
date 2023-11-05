@@ -89,6 +89,8 @@ class ProductAdmin(admin.ModelAdmin):
         'external_id',
         'characteristic_values',
         'url',
+        'category',
+        'category_mathing_button',
     )
     fields = (
         'external_id',
@@ -100,6 +102,7 @@ class ProductAdmin(admin.ModelAdmin):
         'upload_date',
         'is_export_allowed',
         'category',
+        'category_mathing_button',
     )
     filter_horizontal = ('characteristic_values',)
     list_editable = ('is_export_allowed',)
@@ -120,3 +123,10 @@ class ProductAdmin(admin.ModelAdmin):
 
     preview_image.short_description = 'Изображение'
 
+    def category_mathing_button(self, product):
+        category_id = product.category_id
+        url = reverse('admin:common_categorymatching_changelist') + f'?provider_category_id={category_id}'
+
+        return format_html(f'<a href="{url}" class="button" target="_blank">Сопоставить категорию</a>')
+
+    category_mathing_button.short_description = ''

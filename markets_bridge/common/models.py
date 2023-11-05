@@ -127,14 +127,14 @@ class CharacteristicMatching(models.Model):
         null=True,
         blank=True,
     )
-    # recipient_value = models.ForeignKey(
-    #     'recipient.CharacteristicValue',
-    #     on_delete=models.SET_NULL,
-    #     related_name='characteristic_matchings',
-    #     verbose_name='Значение в системе получателя',
-    #     null=True,
-    #     blank=True,
-    # )
+    recipient_value = models.ForeignKey(
+        'recipient.CharacteristicValue',
+        on_delete=models.SET_NULL,
+        related_name='characteristic_matchings',
+        verbose_name='Значение в системе получателя',
+        null=True,
+        blank=True,
+    )
     value = models.CharField(
         max_length=255,
         verbose_name='"Сырое" значение',
@@ -166,6 +166,7 @@ class CharacteristicValueMatching(models.Model):
     provider_characteristic_value = models.ForeignKey(
         'provider.CharacteristicValue',
         on_delete=models.SET_NULL,
+        related_name='matchings',
         verbose_name='Значение поставщика',
         null=True,
         blank=True,

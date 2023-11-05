@@ -43,8 +43,7 @@ def validate_category_matching(sender, instance, created, **kwargs):
             category_matching_id=instance.id,
         ).delete()
 
-        if not instance.recipient_category.characteristics.exists():
-            update_recipient_attributes(instance.recipient_category.external_id)
+        update_recipient_attributes(instance.recipient_category.external_id)
 
         recipient_characteristic_ids = Characteristic.objects.filter(
             categories=instance.recipient_category_id,
@@ -71,7 +70,7 @@ def validate_category_matching(sender, instance, created, **kwargs):
             char_value_mathing_list = [
                 CharacteristicValueMatching(
                     characteristic_matching_id=char_mathing.id,
-                    recipient_characteristic_value=value_id,
+                    recipient_characteristic_value_id=value_id,
                 )
                 for value_id in recipient_char_value_ids
             ]
