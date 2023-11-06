@@ -35,6 +35,7 @@ from provider.services import (
     create_or_update_product,
     get_or_create_category,
     get_or_create_characteristic_value,
+    get_products_for_ozon,
     update_or_create_characteristic,
 )
 
@@ -71,83 +72,9 @@ class ProductAPIViewSet(ModelViewSet):
     # TODO: Написать вместо этого логику получения нужных данных в сервисе ozon-outloader
     @action(detail=False, methods=('GET',))
     def for_ozon(self, request):
-        result = []
+        products = get_products_for_ozon(request.get_host())
 
-        for product in self.get_queryset().filter(is_export_allowed=True):
-            host = request.get_host()
-            attributes = []
-            category_matching = product.category.matching
-            recipient_category = category_matching.recipient_category
-
-            product_characteristic_values = product.characteristic_values.all()
-
-            for value in product_characteristic_values:
-                try:
-                    recipient_value = value.matchings.get(
-                        characteristic_matching__category_matching=category_matching,
-                    ).recipient_characteristic_value
-                except CharacteristicValueMatching.DoesNotExist:
-                    pass
-                else:
-                    attributes.append(
-                        dict(
-                            complex_id=0,
-                            id=recipient_value.characteristic.external_id,
-                            values=[
-                                dict(
-                                    dictionary_value_id=recipient_value.external_id,
-                                )
-                            ]
-                        )
-                    )
-
-            char_mathings_with_default_value = category_matching.characteristic_matchings.filter(
-                recipient_value__isnull=False,
-            )
-
-            for matching in char_mathings_with_default_value:
-                attributes.append(
-                    dict(
-                        complex_id=0,
-                        id=matching.recipient_characteristic.external_id,
-                        values=[
-                            dict(
-                                dictionary_value_id=matching.recipient_value.external_id
-                            )
-                        ]
-                    )
-                )
-
-            char_mathings_with_default_raw_value = category_matching.characteristic_matchings.filter(
-                value__isnull=False,
-            )
-
-            for matching in char_mathings_with_default_raw_value:
-                attributes.append(
-                    dict(
-                        complex_id=0,
-                        id=matching.recipient_characteristic.external_id,
-                        values=[
-                            dict(
-                                value=matching.value
-                            )
-                        ]
-                    )
-                )
-
-            result.append(
-                dict(
-                    attributes=attributes,
-                    name=product.translated_name,
-                    description_category_id=recipient_category.external_id,
-                    images=[f'{host}{image_record.image.url}' for image_record in product.images.all()],
-                    offer_id=str(product.id),
-                    old_price=str(product.price),
-                    price=str(product.discounted_price),
-                    vat='0.1'
-                )
-            )
-        return Response(dict(items=result))
+        return Response(products)
 
 
 class ProductImageAPIViewSet(ModelViewSet):
