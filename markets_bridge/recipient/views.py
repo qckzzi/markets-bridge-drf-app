@@ -23,7 +23,7 @@ from recipient.serializers import (
     RelevantCategorySerializer,
 )
 from recipient.services import (
-    get_matched_categories,
+    get_matched_category_external_ids,
     update_or_create_category,
     update_or_create_characteristic,
     update_or_create_characteristic_value,
@@ -51,7 +51,7 @@ class CategoryAPIViewSet(ModelViewSet):
 
     @action(detail=False, methods=('GET',))
     def relevant(self, request):
-        categories = get_matched_categories()
+        categories = get_matched_category_external_ids()
         serializer = self.relevant_serializer_class(categories, many=True)
 
         return Response(data=serializer.data)

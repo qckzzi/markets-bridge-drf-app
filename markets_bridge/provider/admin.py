@@ -2,7 +2,11 @@ from django.contrib import (
     admin,
 )
 from django.utils.html import (
+    format_html,
     mark_safe,
+)
+from rest_framework.reverse import (
+    reverse,
 )
 
 from provider.models import (
@@ -17,9 +21,8 @@ from provider.models import (
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = ('external_id', 'name', 'translated_name', 'recipient_category', 'marketplace')
+    list_display = ('external_id', 'name', 'translated_name', 'marketplace')
     search_fields = ('external_id', 'name', 'translated_name',)
-    raw_id_fields = ('recipient_category',)
 
 
 @admin.register(Characteristic)
@@ -27,14 +30,12 @@ class CharacteristicAdmin(admin.ModelAdmin):
     filter_horizontal = ('categories',)
     list_display = ('external_id', 'name', 'translated_name', 'is_required')
     search_fields = ('external_id', 'name', 'translated_name')
-    raw_id_fields = ('recipient_characteristic',)
 
 
 @admin.register(CharacteristicValue)
 class CharacteristicValueAdmin(admin.ModelAdmin):
     list_display = ('external_id', 'value', 'translated_value', 'characteristic')
     search_fields = ('external_id', 'value', 'translated_value')
-    raw_id_fields = ('recipient_characteristic_value',)
 
 
 class ProductValueAdmin(admin.TabularInline):
@@ -63,9 +64,34 @@ class ProductImageAdmin(admin.TabularInline):
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ('preview_image', 'name', 'translated_name', 'price', 'currency', 'category', 'status', 'marketplace')
-    search_fields = ('name', 'translated_name', 'description', 'translated_description', 'provider_category__name')
-    readonly_fields = ('currency', 'import_date', 'update_date', 'upload_date', 'external_id', 'characteristic_values', 'url')
+    list_display = (
+        'preview_image',
+        'name',
+        'translated_name',
+        'price',
+        'currency',
+        'category',
+        'is_export_allowed',
+        'marketplace',
+    )
+    search_fields = (
+        'name',
+        'translated_name',
+        'description',
+        'translated_description',
+        'category__name',
+    )
+    readonly_fields = (
+        'currency',
+        'import_date',
+        'update_date',
+        'upload_date',
+        'external_id',
+        'characteristic_values',
+        'url',
+        'category',
+        'category_mathing_button',
+    )
     fields = (
         'external_id',
         ('name', 'translated_name'),
@@ -74,11 +100,12 @@ class ProductAdmin(admin.ModelAdmin):
         'import_date', 
         'update_date', 
         'upload_date',
-        'status',
+        'is_export_allowed',
         'category',
+        'category_mathing_button',
     )
     filter_horizontal = ('characteristic_values',)
-    list_editable = ('status',)
+    list_editable = ('is_export_allowed',)
     inlines = (ProductImageAdmin, ProductValueAdmin)
 
     def currency(self, product):
@@ -96,3 +123,10 @@ class ProductAdmin(admin.ModelAdmin):
 
     preview_image.short_description = 'Изображение'
 
+    def category_mathing_button(self, product):
+        category_id = product.category_id
+        url = reverse('admin:common_categorymatching_changelist') + f'?provider_category_id={category_id}'
+
+        return format_html(f'<a href="{url}" class="button" target="_blank">Сопоставить категорию</a>')
+
+    category_mathing_button.short_description = ''

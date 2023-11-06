@@ -22,7 +22,6 @@ class CategorySerializer(ModelSerializer):
 
 class RelevantCategorySerializer(Serializer):
     external_id = IntegerField()
-    parent_external_id = IntegerField()
 
 
 class CharacteristicSerializer(ModelSerializer):

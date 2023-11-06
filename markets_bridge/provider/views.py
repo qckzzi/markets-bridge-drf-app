@@ -14,6 +14,9 @@ from rest_framework.viewsets import (
     ModelViewSet,
 )
 
+from common.models import (
+    CharacteristicValueMatching,
+)
 from provider.models import (
     Category,
     Characteristic,
@@ -65,6 +68,87 @@ class ProductAPIViewSet(ModelViewSet):
 
         return Response(serializer.data)
 
+    # TODO: Написать вместо этого логику получения нужных данных в сервисе ozon-outloader
+    @action(detail=False, methods=('GET',))
+    def for_ozon(self, request):
+        result = []
+
+        for product in self.get_queryset().filter(is_export_allowed=True):
+            host = request.get_host()
+            attributes = []
+            category_matching = product.category.matching
+            recipient_category = category_matching.recipient_category
+
+            product_characteristic_values = product.characteristic_values.all()
+
+            for value in product_characteristic_values:
+                try:
+                    recipient_value = value.matchings.get(
+                        characteristic_matching__category_matching=category_matching,
+                    ).recipient_characteristic_value
+                except CharacteristicValueMatching.DoesNotExist:
+                    pass
+                else:
+                    attributes.append(
+                        dict(
+                            complex_id=0,
+                            id=recipient_value.characteristic.external_id,
+                            values=[
+                                dict(
+                                    dictionary_value_id=recipient_value.external_id,
+                                )
+                            ]
+                        )
+                    )
+
+            char_mathings_with_default_value = category_matching.characteristic_matchings.filter(
+                recipient_value__isnull=False,
+            )
+
+            for matching in char_mathings_with_default_value:
+                attributes.append(
+                    dict(
+                        complex_id=0,
+                        id=matching.recipient_characteristic.external_id,
+                        values=[
+                            dict(
+                                dictionary_value_id=matching.recipient_value.external_id
+                            )
+                        ]
+                    )
+                )
+
+            char_mathings_with_default_raw_value = category_matching.characteristic_matchings.filter(
+                value__isnull=False,
+            )
+
+            for matching in char_mathings_with_default_raw_value:
+                attributes.append(
+                    dict(
+                        complex_id=0,
+                        id=matching.recipient_characteristic.external_id,
+                        values=[
+                            dict(
+                                value=matching.value
+                            )
+                        ]
+                    )
+                )
+
+            result.append(
+                dict(
+                    attributes=attributes,
+                    name=product.translated_name,
+                    description_category_id=recipient_category.external_id,
+                    images=[f'{host}{image_record.image.url}' for image_record in product.images.all()],
+                    offer_id=str(product.id),
+                    old_price=str(product.price),
+                    price=str(product.discounted_price),
+                    vat='0.1'
+                )
+            )
+        return Response(dict(items=result))
+
 
 class ProductImageAPIViewSet(ModelViewSet):
     queryset = ProductImage.objects.all()
@@ -96,7 +180,7 @@ class CategoryAPIViewSet(ModelViewSet):
         untranslated_category = self.get_queryset().filter(
             Q(translated_name='') | Q(translated_name__isnull=True),
         ).order_by(
-            '-products',
+            'products',
             '?',
         ).first()
 
