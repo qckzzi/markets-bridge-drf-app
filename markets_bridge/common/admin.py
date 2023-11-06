@@ -81,6 +81,7 @@ class CharacteristicMatchingAdmin(admin.ModelAdmin):
     list_filter = ('recipient_characteristic__is_required',)
     fields = ('recipient_characteristic', 'provider_characteristic', 'values_mathing_button', 'value')
     readonly_fields = ('values_mathing_button', 'recipient_characteristic')
+    search_fields = ('recipient_characteristic__name',)
 
     list_per_page = 10
 
