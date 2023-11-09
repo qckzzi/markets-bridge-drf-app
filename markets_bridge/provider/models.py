@@ -125,7 +125,28 @@ class CharacteristicValue(models.Model):
 
     class Meta:
         verbose_name = 'Значение характеристики в системе поставщика'
-        verbose_name_plural = 'Значения характеристики в системе поставщика'
+        verbose_name_plural = 'Значения характеристик в системе поставщика'
+
+
+class Brand(models.Model):
+    external_id = models.PositiveIntegerField(
+        verbose_name='Внешний id в системе поставщика',
+        db_index=True,
+    )
+    name = models.CharField(
+        verbose_name='Наименование',
+        max_length=255,
+    )
+    marketplace = models.ForeignKey(
+        'common.Marketplace',
+        verbose_name='Маркетплейс-поставщик',
+        on_delete=models.PROTECT,
+        related_name='provider_brands',
+    )
+
+    class Meta:
+        verbose_name = 'Бренд в системе поставщика'
+        verbose_name_plural = 'Бренды с системе поставщика'
 
 
 class Product(models.Model):
@@ -146,6 +167,14 @@ class Product(models.Model):
     description = models.TextField(
         verbose_name='Описание',
         default='',
+        null=True,
+        blank=True,
+    )
+    brand = models.ForeignKey(
+        'provider.Brand',
+        on_delete=models.SET_NULL,
+        related_name='products',
+        verbose_name='Бренд',
         null=True,
         blank=True,
     )
