@@ -10,6 +10,7 @@ from rest_framework.reverse import (
 )
 
 from provider.models import (
+    Brand,
     Category,
     Characteristic,
     CharacteristicValue,
@@ -93,7 +94,7 @@ class ProductAdmin(admin.ModelAdmin):
         'upload_date',
         'external_id',
         'characteristic_values',
-        'url',
+        'product_url',
         'category',
         'category_mathing_button',
     )
@@ -101,7 +102,7 @@ class ProductAdmin(admin.ModelAdmin):
         'external_id',
         ('product_code', 'name', 'translated_name'),
         'brand',
-        'url',
+        'product_url',
         ('price', 'discounted_price', 'currency'),
         'stock_quantity',
         'import_date', 
@@ -137,3 +138,13 @@ class ProductAdmin(admin.ModelAdmin):
         return format_html(f'<a href="{url}" class="button" target="_blank">Сопоставить категорию</a>')
 
     category_mathing_button.short_description = ''
+
+    def product_url(self, product):
+        return format_html(f'<a href="{product.url}" target="_blank">{product.url}</a>')
+
+    product_url.short_description = 'URL товара'
+
+@admin.register(Brand)
+class BrandAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'marketplace')
+

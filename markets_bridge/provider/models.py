@@ -140,6 +140,9 @@ class Brand(models.Model):
         related_name='provider_brands',
     )
 
+    def __str__(self):
+        return f'{self.name} ({self.marketplace})'
+
     class Meta:
         verbose_name = 'Бренд в системе поставщика'
         verbose_name_plural = 'Бренды с системе поставщика'
