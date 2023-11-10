@@ -14,10 +14,8 @@ from rest_framework.viewsets import (
     ModelViewSet,
 )
 
-from common.models import (
-    CharacteristicValueMatching,
-)
 from provider.models import (
+    Brand,
     Category,
     Characteristic,
     CharacteristicValue,
@@ -25,6 +23,7 @@ from provider.models import (
     ProductImage,
 )
 from provider.serializer import (
+    BrandSerializer,
     CategorySerializer,
     CharacteristicSerializer,
     CharacteristicValueSerializer,
@@ -33,6 +32,7 @@ from provider.serializer import (
 )
 from provider.services import (
     create_or_update_product,
+    get_or_create_brand,
     get_or_create_category,
     get_or_create_characteristic_value,
     get_products_for_ozon,
@@ -193,3 +193,19 @@ class CharacteristicValueAPIViewSet(ModelViewSet):
         serializer = self.get_serializer(not_translated_values)
 
         return Response(serializer.data)
+
+
+class BrandAPIViewSet(ModelViewSet):
+    serializer_class = BrandSerializer
+    queryset = Brand.objects.all()
+
+    def create(self, request, *args, **kwargs):
+        brand, is_new = get_or_create_brand(request.data)
+        serializer = self.get_serializer(brand)
+
+        if is_new:
+            status_code = status.HTTP_201_CREATED
+        else:
+            status_code = status.HTTP_200_OK
+
+        return Response(data=serializer.data, status=status_code)

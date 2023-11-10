@@ -60,10 +60,6 @@ class Characteristic(models.Model):
         null=True,
         blank=True,
     )
-    is_required = models.BooleanField(
-        verbose_name='Обязательная характеристика',
-        default=False,
-    )
     categories = models.ManyToManyField(
         'provider.Category',
         verbose_name='Категории в системе поставщика',
@@ -164,9 +160,9 @@ class Product(models.Model):
         null=True,
         blank=True,
     )
-    description = models.TextField(
-        verbose_name='Описание',
-        default='',
+    product_code = models.CharField(
+        max_length=255,
+        verbose_name='Код товара',
         null=True,
         blank=True,
     )
@@ -175,11 +171,6 @@ class Product(models.Model):
         on_delete=models.SET_NULL,
         related_name='products',
         verbose_name='Бренд',
-        null=True,
-        blank=True,
-    )
-    translated_description = models.TextField(
-        verbose_name='Переведенное описание',
         null=True,
         blank=True,
     )
@@ -197,6 +188,10 @@ class Product(models.Model):
         max_digits=8,
         decimal_places=2,
         default=Decimal('0.00'),
+    )
+    stock_quantity = models.IntegerField(
+        verbose_name='Количество в наличии',
+        default=0,
     )
     import_date = models.DateTimeField(
         verbose_name='Дата добавления',

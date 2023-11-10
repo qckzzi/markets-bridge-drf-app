@@ -13,6 +13,7 @@ from common.models import (
     SystemSettingConfig,
 )
 from provider.models import (
+    Brand,
     Category,
     Characteristic,
     CharacteristicValue,
@@ -24,16 +25,24 @@ from provider.models import (
 def create_or_update_product(product_data: dict) -> tuple[Product, bool]:
     """Создает товар, либо обновляет его."""
 
-    category_external_id = product_data.pop('category_external_id')
     marketplace_id = product_data.get('marketplace_id')
 
+    category_external_id = product_data.pop('category_external_id')
     category = get_object_or_404(
         Category,
         external_id=category_external_id,
         marketplace_id=marketplace_id,
     )
-
     product_data['category_id'] = category.id
+
+    brand_external_id = product_data.pop('brand_external_id')
+    brand = get_object_or_404(
+        Brand,
+        external_id=brand_external_id,
+        marketplace_id=marketplace_id,
+    )
+    product_data['brand_id'] = brand.id
+
     external_id = product_data.get('external_id')
     value_external_ids = product_data.pop('characteristic_value_external_ids')
 
@@ -54,8 +63,10 @@ def create_or_update_product(product_data: dict) -> tuple[Product, bool]:
             for value_id in characteristic_values.values_list('id', flat=True)
         )
     else:
-        # TODO: Сделать обновление стоимости и наличия товара
-        ...
+        product.price = product_data['price']
+        product.discounted_price = product_data['discounted_price']
+        product.stock_quantity = product_data['stock_quantity']
+        product.save()
 
     return product, is_new
 
@@ -243,3 +254,16 @@ def get_products_for_ozon(host) -> dict:
 def get_converted_price(price: Decimal):
     # TODO: Написать конвертер валют
     return price * Decimal('3.28') * SystemSettingConfig.objects.get(is_selected=True).markup
+
+
+def get_or_create_brand(brand_data: dict) -> tuple[Brand, bool]:
+    external_id = brand_data.get('external_id')
+    marketplace_id = brand_data.get('marketplace_id')
+
+    brand, is_new = Brand.objects.get_or_create(
+        external_id=external_id,
+        marketplace_id=marketplace_id,
+        defaults=brand_data,
+    )
+
+    return brand, is_new
