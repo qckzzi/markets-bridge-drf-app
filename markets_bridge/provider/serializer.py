@@ -1,8 +1,10 @@
 from rest_framework.serializers import (
+    ALL_FIELDS,
     ModelSerializer,
 )
 
 from provider.models import (
+    Brand,
     Category,
     Characteristic,
     CharacteristicValue,
@@ -14,28 +16,34 @@ from provider.models import (
 class ProductSerializer(ModelSerializer):
     class Meta:
         model = Product
-        fields = '__all__'
+        fields = ALL_FIELDS
 
 
 class ProductImageSerializer(ModelSerializer):
     class Meta:
         model = ProductImage
-        fields = '__all__'
+        fields = ALL_FIELDS
 
 
 class CategorySerializer(ModelSerializer):
     class Meta:
         model = Category
-        fields = '__all__'
+        fields = ALL_FIELDS
 
 
 class CharacteristicSerializer(ModelSerializer):
     class Meta:
         model = Characteristic
-        fields = '__all__'
+        fields = ALL_FIELDS
 
 
 class CharacteristicValueSerializer(ModelSerializer):
     class Meta:
         model = CharacteristicValue
-        fields = '__all__'
+        fields = ALL_FIELDS
+
+
+class BrandSerializer(ModelSerializer):
+    class Meta:
+        model = Brand
+        fields = ALL_FIELDS

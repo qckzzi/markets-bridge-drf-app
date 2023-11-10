@@ -7,6 +7,7 @@ from rest_framework.routers import (
 )
 
 from provider.views import (
+    BrandAPIViewSet,
     CategoryAPIViewSet,
     CharacteristicAPIViewSet,
     CharacteristicValueAPIViewSet,
@@ -37,6 +38,10 @@ router.register(
 router.register(
     r'characteristic_values',
     CharacteristicValueAPIViewSet,
+)
+router.register(
+    r'brands',
+    BrandAPIViewSet,
 )
 
 urlpatterns = [

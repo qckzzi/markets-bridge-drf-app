@@ -10,6 +10,7 @@ from rest_framework.reverse import (
 )
 
 from provider.models import (
+    Brand,
     Category,
     Characteristic,
     CharacteristicValue,
@@ -28,7 +29,7 @@ class CategoryAdmin(admin.ModelAdmin):
 @admin.register(Characteristic)
 class CharacteristicAdmin(admin.ModelAdmin):
     filter_horizontal = ('categories',)
-    list_display = ('external_id', 'name', 'translated_name', 'is_required')
+    list_display = ('external_id', 'name', 'translated_name')
     search_fields = ('external_id', 'name', 'translated_name')
 
 
@@ -65,15 +66,19 @@ class ProductImageAdmin(admin.TabularInline):
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
     list_display = (
+        'id',
         'preview_image',
+        'brand',
+        'product_code',
         'name',
         'translated_name',
-        'price',
+        'discounted_price',
         'currency',
         'category',
         'is_export_allowed',
         'marketplace',
     )
+    list_display_links = ('id', 'preview_image')
     search_fields = (
         'name',
         'translated_name',
@@ -82,21 +87,24 @@ class ProductAdmin(admin.ModelAdmin):
         'category__name',
     )
     readonly_fields = (
+        'brand',
         'currency',
         'import_date',
         'update_date',
         'upload_date',
         'external_id',
         'characteristic_values',
-        'url',
+        'product_url',
         'category',
         'category_mathing_button',
     )
     fields = (
         'external_id',
-        ('name', 'translated_name'),
-        'url',
+        ('product_code', 'name', 'translated_name'),
+        'brand',
+        'product_url',
         ('price', 'discounted_price', 'currency'),
+        'stock_quantity',
         'import_date', 
         'update_date', 
         'upload_date',
@@ -130,3 +138,13 @@ class ProductAdmin(admin.ModelAdmin):
         return format_html(f'<a href="{url}" class="button" target="_blank">Сопоставить категорию</a>')
 
     category_mathing_button.short_description = ''
+
+    def product_url(self, product):
+        return format_html(f'<a href="{product.url}" target="_blank">{product.url}</a>')
+
+    product_url.short_description = 'URL товара'
+
+@admin.register(Brand)
+class BrandAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'marketplace')
+

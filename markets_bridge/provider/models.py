@@ -60,10 +60,6 @@ class Characteristic(models.Model):
         null=True,
         blank=True,
     )
-    is_required = models.BooleanField(
-        verbose_name='Обязательная характеристика',
-        default=False,
-    )
     categories = models.ManyToManyField(
         'provider.Category',
         verbose_name='Категории в системе поставщика',
@@ -125,7 +121,31 @@ class CharacteristicValue(models.Model):
 
     class Meta:
         verbose_name = 'Значение характеристики в системе поставщика'
-        verbose_name_plural = 'Значения характеристики в системе поставщика'
+        verbose_name_plural = 'Значения характеристик в системе поставщика'
+
+
+class Brand(models.Model):
+    external_id = models.PositiveIntegerField(
+        verbose_name='Внешний id в системе поставщика',
+        db_index=True,
+    )
+    name = models.CharField(
+        verbose_name='Наименование',
+        max_length=255,
+    )
+    marketplace = models.ForeignKey(
+        'common.Marketplace',
+        verbose_name='Маркетплейс-поставщик',
+        on_delete=models.PROTECT,
+        related_name='provider_brands',
+    )
+
+    def __str__(self):
+        return f'{self.name} ({self.marketplace})'
+
+    class Meta:
+        verbose_name = 'Бренд в системе поставщика'
+        verbose_name_plural = 'Бренды с системе поставщика'
 
 
 class Product(models.Model):
@@ -143,14 +163,17 @@ class Product(models.Model):
         null=True,
         blank=True,
     )
-    description = models.TextField(
-        verbose_name='Описание',
-        default='',
+    product_code = models.CharField(
+        max_length=255,
+        verbose_name='Код товара',
         null=True,
         blank=True,
     )
-    translated_description = models.TextField(
-        verbose_name='Переведенное описание',
+    brand = models.ForeignKey(
+        'provider.Brand',
+        on_delete=models.SET_NULL,
+        related_name='products',
+        verbose_name='Бренд',
         null=True,
         blank=True,
     )
@@ -168,6 +191,10 @@ class Product(models.Model):
         max_digits=8,
         decimal_places=2,
         default=Decimal('0.00'),
+    )
+    stock_quantity = models.IntegerField(
+        verbose_name='Количество в наличии',
+        default=0,
     )
     import_date = models.DateTimeField(
         verbose_name='Дата добавления',
