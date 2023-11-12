@@ -136,7 +136,7 @@ def get_or_create_characteristic_value(value_data: dict) -> tuple[Characteristic
     return characteristic_value, is_new
 
 
-def create_category_mathing(category_id) -> CategoryMatching:
+def create_category_matching(category_id) -> CategoryMatching:
     return CategoryMatching.objects.create(
         provider_category_id=category_id,
     )

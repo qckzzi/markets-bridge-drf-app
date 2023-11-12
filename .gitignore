@@ -11,3 +11,6 @@ venv/
 media/
 static/
 .python-version
+*.bak
+*.dat
+*.dir

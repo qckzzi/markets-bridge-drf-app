@@ -9,7 +9,7 @@ class RawCategory(models.Model):
         max_length=100,
     )
     url = models.URLField(
-        verbose_name='URL товара',
+        verbose_name='URL категории/поиска',
     )
     is_allowed_import = models.BooleanField(
         verbose_name='Разрешение для импорта',

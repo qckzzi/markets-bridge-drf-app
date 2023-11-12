@@ -10,5 +10,8 @@ class ProviderConfig(AppConfig):
 
     def ready(self):
         from provider.signals import (
-            validate_category,
+            category_saved,
+            characteristic_saved,
+            characteristic_value_saved,
+            product_saved,
         )

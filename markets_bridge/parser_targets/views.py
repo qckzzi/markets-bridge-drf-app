@@ -1,22 +1,22 @@
 from rest_framework.viewsets import (
-    ModelViewSet,
+    ReadOnlyModelViewSet,
 )
 
-from parser_targets.models import (
-    RawCategory,
-    RawProduct,
-)
 from parser_targets.serializers import (
     RawCategorySerializer,
     RawProductSerializer,
 )
+from parser_targets.services import (
+    get_allowed_categories,
+    get_allowed_products,
+)
 
 
-class RawCategoryAPI(ModelViewSet):
-    queryset = RawCategory.objects.filter(is_allowed_import=True)
+class RawCategoryAPI(ReadOnlyModelViewSet):
+    queryset = get_allowed_categories()
     serializer_class = RawCategorySerializer
 
 
-class RawProductAPI(ModelViewSet):
-    queryset = RawProduct.objects.filter(is_allowed_import=True)
+class RawProductAPI(ReadOnlyModelViewSet):
+    queryset = get_allowed_products()
     serializer_class = RawProductSerializer

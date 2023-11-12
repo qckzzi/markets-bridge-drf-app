@@ -14,6 +14,9 @@ from pathlib import (
     Path,
 )
 
+from celery.schedules import (
+    crontab,
+)
 from django.contrib import (
     admin,
 )
@@ -89,6 +92,25 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'markets_bridge.wsgi.application'
 
+AMQP_CONNECTION_PARAMETERS = {
+    'host': 'localhost',
+    'port': 5672,
+    'heartbeat': 300,
+    'blocked_connection_timeout': 300,
+}
+
+CELERY_BROKER_URL = 'amqp://localhost'
+
+CELERY_BEAT_SCHEDULE = {
+    'parsing_products': {
+        'task': 'parser_targets.tasks.send_target_products_to_parsing',
+        'schedule': crontab(minute='*/5')
+    },
+    'parsing_categories': {
+        'task': 'parser_targets.tasks.send_target_categories_to_parsing',
+        'schedule': crontab(minute='*/5')
+    },
+}
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
