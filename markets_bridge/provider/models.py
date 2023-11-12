@@ -179,6 +179,7 @@ class Product(models.Model):
     )
     url = models.URLField(
         verbose_name='URL товара',
+        max_length=3000,
     )
     price = models.DecimalField(
         verbose_name='Цена',
