@@ -67,6 +67,7 @@ class CharacteristicMatchingAdmin(admin.ModelAdmin):
         'recipient_characteristic',
         'provider_characteristic',
         'recipient_value',
+        'is_raw',
         'value',
     )
     list_editable = (
@@ -80,7 +81,11 @@ class CharacteristicMatchingAdmin(admin.ModelAdmin):
     )
     list_filter = ('recipient_characteristic__is_required',)
     fields = ('recipient_characteristic', 'provider_characteristic', 'values_mathing_button', 'value')
-    readonly_fields = ('values_mathing_button', 'recipient_characteristic')
+    readonly_fields = (
+        'values_mathing_button',
+        'recipient_characteristic',
+        'is_raw',
+    )
     search_fields = ('recipient_characteristic__name',)
 
     list_per_page = 10
@@ -98,6 +103,12 @@ class CharacteristicMatchingAdmin(admin.ModelAdmin):
         return result
 
     values_mathing_button.short_description = ''
+
+    def is_raw(self, mathing):
+        return not mathing.recipient_characteristic.has_reference_values
+
+    is_raw.short_description = 'Является "сырым" значением'
+    is_raw.boolean = True
 
 
 @admin.register(CharacteristicValueMatching)

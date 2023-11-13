@@ -80,10 +80,9 @@ class ProductAdmin(admin.ModelAdmin):
     )
     list_display_links = ('id', 'preview_image')
     search_fields = (
+        'id',
         'name',
         'translated_name',
-        'description',
-        'translated_description',
         'category__name',
     )
     readonly_fields = (
@@ -103,7 +102,7 @@ class ProductAdmin(admin.ModelAdmin):
         ('product_code', 'name', 'translated_name'),
         'brand',
         'product_url',
-        ('price', 'discounted_price', 'currency'),
+        ('price', 'discounted_price', 'currency', 'markup'),
         'stock_quantity',
         'import_date', 
         'update_date', 

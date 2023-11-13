@@ -13,11 +13,13 @@ from common.models import (
 )
 from common.services import (
     get_recipient_category_id_by_category_mathing_id,
-    update_recipient_attributes,
 )
 from recipient.models import (
     Characteristic,
     CharacteristicValue,
+)
+from recipient.utils import (
+    update_recipient_attributes,
 )
 
 

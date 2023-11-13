@@ -86,9 +86,8 @@ class CharacteristicValue(models.Model):
         verbose_name='Внешний id в системе получателя',
         db_index=True,
     )
-    value = models.CharField(
+    value = models.TextField(
         verbose_name='Значение',
-        max_length=200,
     )
     characteristic = models.ForeignKey(
         'recipient.Characteristic',
