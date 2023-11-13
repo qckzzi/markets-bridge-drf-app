@@ -193,6 +193,10 @@ class Product(models.Model):
         decimal_places=2,
         default=Decimal('0.00'),
     )
+    markup = models.PositiveIntegerField(
+        verbose_name='Коэффициент наценки стоимости товара, %',
+        default=0,
+    )
     stock_quantity = models.IntegerField(
         verbose_name='Количество в наличии',
         default=0,

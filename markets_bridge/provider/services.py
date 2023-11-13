@@ -142,10 +142,17 @@ def create_category_matching(category_id) -> CategoryMatching:
     )
 
 
-def get_products_for_ozon(host) -> dict:
+# TODO: Логика выгрузки товара должна быть переделана, DRF не должен формировать данные под формат озона
+#       Писалось на скорую руку...
+def get_products_for_ozon(host: str) -> dict:
     result = []
 
-    for product in Product.objects.filter(is_export_allowed=True):
+    products = Product.objects.filter(
+        is_export_allowed=True,
+        upload_date__isnull=True,
+    )
+
+    for product in products:
         attributes = []
         category_matching = product.category.matching
         recipient_category = category_matching.recipient_category
@@ -236,24 +243,71 @@ def get_products_for_ozon(host) -> dict:
             description_category_id=recipient_category.external_id,
             images=[f'{host}{image_record.image.url}' for image_record in product.images.all()],
             offer_id=str(product.id),
-            price=str(get_converted_price(product.discounted_price)),
+            price=str(get_converted_product_price(product.discounted_price, product.markup)),
             vat='0.1'
         )
 
         if product.price != product.discounted_price:
-            raw_product['old_price'] = str(get_converted_price(product.price))
+            raw_product['old_price'] = str(get_converted_product_price(product.price, product.markup))
 
         result.append(raw_product)
 
         product.upload_date = datetime.datetime.now()
         product.save()
 
-    return dict(items=result)
+    return dict(items=result) if result else {}
 
 
-def get_converted_price(price: Decimal):
+def get_products_for_price_update():
+    result = []
+
+    products = Product.objects.filter(
+        is_export_allowed=True,
+        upload_date__isnull=False,
+    )
+
+    for product in products:
+        product_price = get_converted_product_price(product.discounted_price, product.markup)
+        raw_product = dict(
+            offer_id=str(product.id),
+            price=str(product_price),
+            min_price=str(product_price)
+        )
+
+        if product.price != product.discounted_price:
+            raw_product['old_price'] = str(get_converted_product_price(product.price, product.markup))
+        else:
+            raw_product['old_price'] = '0'
+
+        result.append(raw_product)
+
+    return dict(prices=result) if result else {}
+
+
+def get_products_for_stock_update():
+    result = []
+
+    products = Product.objects.filter(
+        is_export_allowed=True,
+        upload_date__isnull=False,
+    )
+
+    for product in products:
+        raw_product = dict(
+            offer_id=str(product.id),
+            stock=product.stock_quantity,
+        )
+
+        result.append(raw_product)
+
+    return dict(stocks=result) if result else {}
+
+
+def get_converted_product_price(price: Decimal, markup: int):
     # TODO: Написать конвертер валют
-    return price * Decimal('3.28') * SystemSettingConfig.objects.get(is_selected=True).markup
+    converted_price = price * Decimal('3.22')
+
+    return converted_price + converted_price * Decimal((markup/100))
 
 
 def get_or_create_brand(brand_data: dict) -> tuple[Brand, bool]:

@@ -55,11 +55,9 @@ class Currency(models.Model):
 
 
 class SystemSettingConfig(models.Model):
-    markup = models.DecimalField(
-        verbose_name='Коэффициент наценки стоимости товаров',
-        max_digits=3,
-        decimal_places=2,
-        default=Decimal('1.00'),
+    vat_rate = models.PositiveSmallIntegerField(
+        verbose_name='Ставка НДС, %',
+        default=0,
     )
     is_selected = models.BooleanField(
         verbose_name='Активная конфигурация',

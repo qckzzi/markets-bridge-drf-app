@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'django_celery_beat',
     'parser_targets.apps.ParserTargetsConfig',
     'provider.apps.ProviderConfig',
     'recipient.apps.RecipientConfig',
@@ -100,17 +101,8 @@ AMQP_CONNECTION_PARAMETERS = {
 }
 
 CELERY_BROKER_URL = 'amqp://localhost'
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 
-CELERY_BEAT_SCHEDULE = {
-    'parsing_products': {
-        'task': 'parser_targets.tasks.send_target_products_to_parsing',
-        'schedule': crontab(minute='*/5')
-    },
-    'parsing_categories': {
-        'task': 'parser_targets.tasks.send_target_categories_to_parsing',
-        'schedule': crontab(minute='*/5')
-    },
-}
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
