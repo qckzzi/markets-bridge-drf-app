@@ -13,7 +13,9 @@ from common.models import (
     CharacteristicMatching,
     CharacteristicValueMatching,
     Currency,
+    Log,
     Marketplace,
+    SystemEnvironment,
     SystemSettingConfig,
 )
 
@@ -117,3 +119,18 @@ class CharacteristicValueMatchingAdmin(admin.ModelAdmin):
     list_editable = ('provider_characteristic_value',)
     autocomplete_fields = ('provider_characteristic_value',)
     search_fields = ('recipient_characteristic_value__value',)
+
+
+@admin.register(Log)
+class LogAdmin(admin.ModelAdmin):
+    list_display = ('service_name', 'entry', 'timestamp')
+
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+
+        return queryset.order_by('-timestamp')
+
+
+@admin.register(SystemEnvironment)
+class SystemEnvironmentAdmin(admin.ModelAdmin):
+    list_display = ('key', 'value')

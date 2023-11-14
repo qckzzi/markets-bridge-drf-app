@@ -6,22 +6,21 @@ from rest_framework.routers import (
     DefaultRouter,
 )
 
-from parser_targets.views import (
-    RawCategoryAPIViewSet,
-    RawProductAPIViewSet,
+from common.views import (
+    LogsAPIViewSet,
+    SystemEnvironmentsAPIViewSet,
 )
 
-
-app_name = 'parser_targets'
 
 router = DefaultRouter()
 router.register(
-    r'categories',
-    RawCategoryAPIViewSet,
+    r'system_environments',
+    SystemEnvironmentsAPIViewSet,
 )
 router.register(
-    r'products',
-    RawProductAPIViewSet,
+    r'logs',
+    LogsAPIViewSet,
+    basename='log',
 )
 
 urlpatterns = [

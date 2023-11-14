@@ -12,11 +12,11 @@ from parser_targets.services import (
 )
 
 
-class RawCategoryAPI(ReadOnlyModelViewSet):
+class RawCategoryAPIViewSet(ReadOnlyModelViewSet):
     queryset = get_allowed_categories()
     serializer_class = RawCategorySerializer
 
 
-class RawProductAPI(ReadOnlyModelViewSet):
+class RawProductAPIViewSet(ReadOnlyModelViewSet):
     queryset = get_allowed_products()
     serializer_class = RawProductSerializer

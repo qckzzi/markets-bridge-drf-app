@@ -1,7 +1,3 @@
-from decimal import (
-    Decimal,
-)
-
 from django.db import (
     models,
 )
@@ -176,3 +172,37 @@ class CharacteristicValueMatching(models.Model):
     class Meta:
         verbose_name = 'Сопоставление значений характеристик'
         verbose_name_plural = 'Сопоставления значений характеристик'
+
+
+class Log(models.Model):
+    service_name = models.CharField(
+        max_length=255,
+        verbose_name='Наименование сервиса',
+    )
+    entry = models.TextField(
+        verbose_name='Запись',
+    )
+    timestamp = models.DateTimeField(
+        verbose_name='Timestamp',
+        auto_now_add=True,
+    )
+
+    class Meta:
+        verbose_name = 'Логи'
+        verbose_name_plural = 'Записи в логах'
+
+
+class SystemEnvironment(models.Model):
+    key = models.CharField(
+        max_length=255,
+        verbose_name='Ключ',
+        primary_key=True,
+        unique=True,
+    )
+    value = models.TextField(
+        verbose_name='Значение',
+    )
+
+    class Meta:
+        verbose_name = 'Системная переменная'
+        verbose_name_plural = 'Системные переменные'

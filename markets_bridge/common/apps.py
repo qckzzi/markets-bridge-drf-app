@@ -6,7 +6,7 @@ from django.apps import (
 class CommonConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'common'
-    verbose_name = 'Общее'
+    verbose_name = 'Система'
 
     def ready(self):
         from common.signals import (

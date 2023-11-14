@@ -84,7 +84,6 @@ class Characteristic(models.Model):
 class CharacteristicValue(models.Model):
     external_id = models.PositiveIntegerField(
         verbose_name='Внешний id в системе получателя',
-        db_index=True,
     )
     value = models.TextField(
         verbose_name='Значение',
