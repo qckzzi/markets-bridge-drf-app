@@ -22,7 +22,13 @@ from common.models import (
 
 @admin.register(Marketplace)
 class MarketplaceAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'url', 'currency', 'type')
+    list_display = (
+        'id',
+        'name',
+        'url',
+        'currency',
+        'type',
+    )
 
 
 @admin.register(Currency)
@@ -32,17 +38,36 @@ class CurrencyAdmin(admin.ModelAdmin):
 
 @admin.register(SystemSettingConfig)
 class SystemSettingConfigAdmin(admin.ModelAdmin):
-    list_display = ('__str__', 'is_selected')
-    list_editable = ('is_selected',)
+    list_display = (
+        '__str__',
+        'is_selected',
+    )
+    list_editable = (
+        'is_selected',
+    )
 
 
 @admin.register(CategoryMatching)
 class CategoryMatchingAdmin(admin.ModelAdmin):
-    list_display = ('provider_category', 'recipient_category')
-    readonly_fields = ('provider_category', 'characteristic_mathing_button')
-    list_editable = ('recipient_category',)
-    search_fields = ('provider_category__name', 'provider_category__translated_name', 'recipient_category__name',)
-    autocomplete_fields = ('recipient_category',)
+    list_display = (
+        'provider_category',
+        'recipient_category',
+    )
+    readonly_fields = (
+        'provider_category',
+        'characteristic_mathing_button',
+    )
+    list_editable = (
+        'recipient_category',
+    )
+    search_fields = (
+        'provider_category__name',
+        'provider_category__translated_name',
+        'recipient_category__name',
+    )
+    autocomplete_fields = (
+        'recipient_category',
+    )
     fields = (
         'provider_category',
         'recipient_category',
@@ -82,14 +107,22 @@ class CharacteristicMatchingAdmin(admin.ModelAdmin):
         'provider_characteristic',
         'recipient_value',
     )
-    list_filter = ('recipient_characteristic__is_required',)
-    fields = ('recipient_characteristic', 'values_mathing_button', 'value')
+    list_filter = (
+        'recipient_characteristic__is_required',
+    )
+    fields = (
+        'recipient_characteristic',
+        'values_mathing_button',
+        'value',
+    )
     readonly_fields = (
         'values_mathing_button',
         'recipient_characteristic',
         'is_raw',
     )
-    search_fields = ('recipient_characteristic__name',)
+    search_fields = (
+        'recipient_characteristic__name',
+    )
 
     list_per_page = 10
 
@@ -116,24 +149,47 @@ class CharacteristicMatchingAdmin(admin.ModelAdmin):
 
 @admin.register(CharacteristicValueMatching)
 class CharacteristicValueMatchingAdmin(admin.ModelAdmin):
-    list_display = ('recipient_characteristic_value', 'provider_characteristic_value')
-    list_editable = ('provider_characteristic_value',)
-    autocomplete_fields = ('provider_characteristic_value',)
-    search_fields = ('recipient_characteristic_value__value',)
-    readonly_fields = ('recipient_characteristic_value',)
-    fields = ('recipient_characteristic_value', 'provider_characteristic_value')
+    list_display = (
+        'recipient_characteristic_value',
+        'provider_characteristic_value',
+    )
+    list_editable = (
+        'provider_characteristic_value',
+    )
+    autocomplete_fields = (
+        'provider_characteristic_value',
+    )
+    search_fields = (
+        'recipient_characteristic_value__value',
+    )
+    readonly_fields = (
+        'recipient_characteristic_value',
+    )
+    fields = (
+        'recipient_characteristic_value',
+        'provider_characteristic_value',
+    )
 
 
 @admin.register(Log)
 class LogAdmin(admin.ModelAdmin):
-    list_display = ('service_name', 'entry', 'timestamp')
+    list_display = (
+        'service_name',
+        'entry',
+        'timestamp',
+    )
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
 
-        return queryset.order_by('-timestamp')
+        return queryset.order_by(
+            '-timestamp',
+        )
 
 
 @admin.register(SystemEnvironment)
 class SystemEnvironmentAdmin(admin.ModelAdmin):
-    list_display = ('key', 'value')
+    list_display = (
+        'key',
+        'value',
+    )

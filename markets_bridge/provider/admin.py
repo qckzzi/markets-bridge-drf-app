@@ -22,28 +22,73 @@ from provider.models import (
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = ('external_id', 'name', 'translated_name', 'marketplace')
-    search_fields = ('external_id', 'name', 'translated_name',)
-    readonly_fields = ('external_id', 'name', 'marketplace')
+    list_display = (
+        'external_id',
+        'name',
+        'translated_name',
+        'marketplace',
+    )
+    search_fields = (
+        'external_id',
+        'name',
+        'translated_name',
+    )
+    readonly_fields = (
+        'external_id',
+        'name',
+        'marketplace',
+    )
 
 
 @admin.register(Characteristic)
 class CharacteristicAdmin(admin.ModelAdmin):
-    filter_horizontal = ('categories',)
-    list_display = ('external_id', 'name', 'translated_name')
-    search_fields = ('external_id', 'name', 'translated_name')
-    readonly_fields = ('external_id', 'name', 'marketplace', 'categories')
+    filter_horizontal = (
+        'categories',
+    )
+    list_display = (
+        'external_id',
+        'name',
+        'translated_name',
+    )
+    search_fields = (
+        'external_id',
+        'name',
+        'translated_name',
+    )
+    readonly_fields = (
+        'external_id',
+        'name',
+        'marketplace',
+        'categories',
+    )
 
 
 @admin.register(CharacteristicValue)
 class CharacteristicValueAdmin(admin.ModelAdmin):
-    list_display = ('external_id', 'value', 'translated_value', 'characteristic')
-    search_fields = ('external_id', 'value', 'translated_value')
-    readonly_fields = ('external_id', 'value', 'marketplace', 'characteristic')
+    list_display = (
+        'external_id',
+        'value',
+        'translated_value',
+        'characteristic',
+    )
+    search_fields = (
+        'external_id',
+        'value',
+        'translated_value',
+    )
+    readonly_fields = (
+        'external_id',
+        'value',
+        'marketplace',
+        'characteristic',
+    )
 
 
 class ProductValueAdmin(admin.TabularInline):
-    fields = ('value_characteristic', 'value')
+    fields = (
+        'value_characteristic',
+        'value',
+    )
     readonly_fields = fields
     model = ProductValue
     extra = 0
@@ -56,7 +101,9 @@ class ProductValueAdmin(admin.TabularInline):
 
 class ProductImageAdmin(admin.TabularInline):
     model = ProductImage
-    readonly_fields = ('image_preview',)
+    readonly_fields = (
+        'image_preview',
+    )
     extra = 0
 
     def image_preview(self, obj):
@@ -81,7 +128,10 @@ class ProductAdmin(admin.ModelAdmin):
         'is_export_allowed',
         'marketplace',
     )
-    list_display_links = ('id', 'preview_image')
+    list_display_links = (
+        'id',
+        'preview_image',
+    )
     search_fields = (
         'id',
         'name',
@@ -114,8 +164,15 @@ class ProductAdmin(admin.ModelAdmin):
         'category',
         'category_mathing_button',
     )
-    filter_horizontal = ('characteristic_values',)
-    list_editable = ('is_export_allowed',)
+    filter_horizontal = (
+        'characteristic_values',
+    )
+    list_editable = (
+        'is_export_allowed',
+    )
+    list_filter = (
+        'is_export_allowed',
+    )
     inlines = (ProductImageAdmin, ProductValueAdmin)
 
     def currency(self, product):
@@ -146,8 +203,21 @@ class ProductAdmin(admin.ModelAdmin):
 
     product_url.short_description = 'URL товара'
 
+
 @admin.register(Brand)
 class BrandAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'marketplace')
-    readonly_fields = ('id', 'marketplace')
-
+    list_display = (
+        'id',
+        'external_id',
+        'name',
+        'marketplace',
+    )
+    readonly_fields = (
+        'id',
+        'marketplace',
+    )
+    search_fields = (
+        'id',
+        'external_id',
+        'name',
+    )

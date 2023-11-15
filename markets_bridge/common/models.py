@@ -29,7 +29,7 @@ class Marketplace(models.Model):
     )
 
     def __str__(self):
-        return self.name
+        return f'{self.name} (ID: {self.pk})'
 
     class Meta:
         verbose_name = 'Маркетплейс'
@@ -40,11 +40,8 @@ class Currency(models.Model):
     name = models.CharField(verbose_name='Наименование валюты', max_length=100)
     code = models.CharField(verbose_name='Код валюты', max_length=3)
 
-    def __repr__(self):
-        return f'{self.__str__()} (id: {self.id})'
-
     def __str__(self):
-        return self.name
+        return f'{self.name} ({self.code})'
 
     class Meta:
         verbose_name = 'Валюта'
@@ -193,6 +190,9 @@ class Log(models.Model):
         verbose_name = 'Логи'
         verbose_name_plural = 'Записи в логах'
 
+    def __str__(self):
+        return f'{self.service_name} log (ID: {self.pk})'
+
 
 class SystemEnvironment(models.Model):
     key = models.CharField(
@@ -208,3 +208,6 @@ class SystemEnvironment(models.Model):
     class Meta:
         verbose_name = 'Системная переменная'
         verbose_name_plural = 'Системные переменные'
+
+    def __str__(self):
+        return f'{self.key}: {self.value}'

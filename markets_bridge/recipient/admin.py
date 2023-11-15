@@ -15,15 +15,30 @@ from recipient.models import (
 
 @admin.register(Category)
 class CategoryAdmin(ReadOnlyModelAdmin):
-    list_display = ('external_id', 'name', 'parent_category')
-    search_fields = ('external_id', 'name')
-    readonly_fields = ('parent_category',)
+    list_display = (
+        'external_id',
+        'name',
+        'parent_category',
+    )
+    search_fields = (
+        'external_id',
+        'name',
+    )
+    readonly_fields = (
+        'parent_category',
+    )
 
 
 @admin.register(Characteristic)
 class CharacteristicAdmin(ReadOnlyModelAdmin):
-    list_display = ('external_id', 'name')
-    search_fields = ('external_id', 'name')
+    list_display = (
+        'external_id',
+        'name',
+    )
+    search_fields = (
+        'external_id',
+        'name',
+    )
 
 
 @admin.register(CharacteristicForCategory)
@@ -34,5 +49,13 @@ class CharacteristicForCategoryAdmin(ReadOnlyModelAdmin):
 
 @admin.register(CharacteristicValue)
 class CharacteristicValueAdmin(ReadOnlyModelAdmin):
-    list_display = ('external_id', 'characteristic', 'value')
-    search_fields = ('external_id', 'characteristic__name', 'value')
+    list_display = (
+        'external_id',
+        'characteristic',
+        'value',
+    )
+    search_fields = (
+        'external_id',
+        'characteristic__name',
+        'value',
+    )

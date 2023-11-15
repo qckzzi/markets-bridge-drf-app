@@ -28,7 +28,7 @@ class Category(models.Model):
     )
 
     def __str__(self):
-        return f'{self.external_id}, {self.name}'
+        return f'{self.name} ({self.parent_category.name if self.parent_category else ""})'
 
     class Meta:
         verbose_name = 'Категория в системе получателя'
@@ -89,9 +89,6 @@ class Characteristic(models.Model):
         related_name='recipient_characteristics',
         verbose_name='Маркетплейс-получатель',
     )
-
-    def __repr__(self):
-        return f'{self.__str__()} (id: {self.id})'
 
     def __str__(self):
         return self.name
