@@ -230,7 +230,7 @@ class Product(models.Model):
         'provider.CharacteristicValue',
         verbose_name='Значение характеристики в системе поставщика',
         related_name='products',
-        through='ProductValue',
+        through='provider.ProductValue',
     )
     marketplace = models.ForeignKey(
         'common.Marketplace',

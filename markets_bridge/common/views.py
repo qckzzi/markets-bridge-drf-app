@@ -1,8 +1,14 @@
+from rest_framework import (
+    status,
+)
 from rest_framework.decorators import (
     action,
 )
 from rest_framework.permissions import (
     IsAuthenticated,
+)
+from rest_framework.response import (
+    Response,
 )
 from rest_framework.viewsets import (
     GenericViewSet,
@@ -16,6 +22,7 @@ from common.serializers import (
     SystemEnvironmentSerializer,
 )
 from common.services import (
+    create_characteristic_matchings_by_category_matching_id,
     get_system_environments,
 )
 from core.viewsets import (
@@ -43,4 +50,7 @@ class CharacteristicMatchingAPIViewSet(GenericViewSet):
 
     @action(['POST'], detail=False)
     def create_by_category_matching(self, request):
-        ...
+        category_matching_id = request.data['category_matching_id']
+        create_characteristic_matchings_by_category_matching_id(category_matching_id)
+
+        return Response(status=status.HTTP_201_CREATED)

@@ -15,7 +15,7 @@ class Category(models.Model):
     parent_category = models.ForeignKey(
         'self',
         on_delete=models.PROTECT,
-        verbose_name='Родительские категории',
+        verbose_name='Родительская категория',
         related_name='children',
         null=True,
         blank=True,
@@ -30,10 +30,30 @@ class Category(models.Model):
     def __str__(self):
         return f'{self.external_id}, {self.name}'
 
-
     class Meta:
         verbose_name = 'Категория в системе получателя'
         verbose_name_plural = 'Категории в системе получателя'
+
+
+class CharacteristicForCategory(models.Model):
+    category = models.ForeignKey(
+        'recipient.Category',
+        on_delete=models.CASCADE,
+        verbose_name='Категория в системе поставщика',
+    )
+    characteristic = models.ForeignKey(
+        'recipient.Characteristic',
+        on_delete=models.CASCADE,
+        verbose_name='Характеристика в системе поставщика',
+    )
+    is_required = models.BooleanField(
+        verbose_name='Обязательная характеристика',
+        default=False,
+    )
+
+    class Meta:
+        verbose_name = 'Связь категория-характеристика'
+        verbose_name_plural = 'Связи категория-характеристика'
 
 
 class Characteristic(models.Model):
@@ -50,10 +70,6 @@ class Characteristic(models.Model):
         blank=True,
         verbose_name='Описание характеристики',
     )
-    is_required = models.BooleanField(
-        verbose_name='Обязательная характеристика',
-        default=False,
-    )
     has_reference_values = models.BooleanField(
         default=False,
         verbose_name='Имеет ссылочные значения',
@@ -62,6 +78,7 @@ class Characteristic(models.Model):
         'recipient.Category',
         verbose_name='Категории в системе получателя',
         related_name='characteristics',
+        through='recipient.CharacteristicForCategory',
     )
     marketplace = models.ForeignKey(
         'common.Marketplace',
@@ -74,7 +91,7 @@ class Characteristic(models.Model):
         return f'{self.__str__()} (id: {self.id})'
 
     def __str__(self):
-        return f'{self.name}{"*" if self.is_required else ""}'
+        return self.name
 
     class Meta:
         verbose_name = 'Характеристика товара с системе получателя'

@@ -10,6 +10,6 @@ class CommonConfig(AppConfig):
 
     def ready(self):
         from common.signals import (
-            cache_original_recipient_category,
-            validate_category_matching,
+            category_matching_pre_saved,
+            category_matching_saved,
         )

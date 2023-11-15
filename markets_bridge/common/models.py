@@ -112,7 +112,7 @@ class CharacteristicMatching(models.Model):
         verbose_name='Сопоставление категорий',
     )
     recipient_characteristic = models.ForeignKey(
-        'recipient.Characteristic',
+        'recipient.CharacteristicForCategory',
         on_delete=models.CASCADE,
         verbose_name='Характеристика получателя',
     )
