@@ -2,34 +2,60 @@ from django.contrib import (
     admin,
 )
 
+from core.admin import (
+    ReadOnlyModelAdmin,
+)
 from recipient.models import (
     Category,
     Characteristic,
+    CharacteristicForCategory,
     CharacteristicValue,
 )
 
 
 @admin.register(Category)
-class CategoryAdmin(admin.ModelAdmin):
-    list_display = ('external_id', 'name', 'parent_category')
-    search_fields = ('external_id', 'name')
-    readonly_fields = ('parent_category',)
+class CategoryAdmin(ReadOnlyModelAdmin):
+    list_display = (
+        'external_id',
+        'name',
+        'parent_category',
+    )
+    search_fields = (
+        'external_id',
+        'name',
+    )
+    readonly_fields = (
+        'parent_category',
+    )
 
 
 @admin.register(Characteristic)
-class CharacteristicAdmin(admin.ModelAdmin):
-    list_display = ('external_id', 'name', 'is_required', 'categories_name')
-    search_fields = ('external_id', 'name', 'is_required', 'categories__name')
-    readonly_fields = ('categories',)
-    list_filter = ('is_required',)
+class CharacteristicAdmin(ReadOnlyModelAdmin):
+    list_display = (
+        'external_id',
+        'name',
+    )
+    search_fields = (
+        'external_id',
+        'name',
+    )
 
-    def categories_name(self, characteristic):
-        return ', '.join(characteristic.categories.values_list('name', flat=True))
 
-    categories_name.short_description = 'Категории'
+@admin.register(CharacteristicForCategory)
+class CharacteristicForCategoryAdmin(ReadOnlyModelAdmin):
+    list_display = ('characteristic', 'category')
+    search_fields = ('characteristic__name', 'category__name')
 
 
 @admin.register(CharacteristicValue)
-class CharacteristicValueAdmin(admin.ModelAdmin):
-    list_display = ('external_id', 'characteristic', 'value')
-    search_fields = ('external_id', 'characteristic__name', 'value')
+class CharacteristicValueAdmin(ReadOnlyModelAdmin):
+    list_display = (
+        'external_id',
+        'characteristic',
+        'value',
+    )
+    search_fields = (
+        'external_id',
+        'characteristic__name',
+        'value',
+    )

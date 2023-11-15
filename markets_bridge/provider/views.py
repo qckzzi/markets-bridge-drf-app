@@ -1,11 +1,17 @@
 from rest_framework import (
     status,
 )
+from rest_framework.permissions import (
+    IsAuthenticated,
+)
 from rest_framework.response import (
     Response,
 )
 from rest_framework.viewsets import (
     ModelViewSet,
+)
+from rest_framework_simplejwt.authentication import (
+    JWTAuthentication,
 )
 
 from provider.models import (
@@ -36,6 +42,8 @@ from provider.services import (
 class ProductAPIViewSet(ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
 
     def create(self, request, *args, **kwargs):
         product, is_new = create_or_update_product(request.data)
@@ -52,11 +60,15 @@ class ProductAPIViewSet(ModelViewSet):
 class ProductImageAPIViewSet(ModelViewSet):
     queryset = ProductImage.objects.all()
     serializer_class = ProductImageSerializer
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
 
 
 class CategoryAPIViewSet(ModelViewSet):
     serializer_class = CategorySerializer
     queryset = Category.objects.all()
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     
     def create(self, request, *args, **kwargs):
         category, is_new = get_or_create_category(request.data)
@@ -76,6 +88,8 @@ class CategoryAPIViewSet(ModelViewSet):
 class CharacteristicAPIViewSet(ModelViewSet):
     serializer_class = CharacteristicSerializer
     queryset = Characteristic.objects.all()
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
 
     def create(self, request, *args, **kwargs):
         characteristic, is_new = update_or_create_characteristic(request.data)
@@ -95,6 +109,8 @@ class CharacteristicAPIViewSet(ModelViewSet):
 class CharacteristicValueAPIViewSet(ModelViewSet):
     serializer_class = CharacteristicValueSerializer
     queryset = CharacteristicValue.objects.all()
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
 
     def create(self, request, *args, **kwargs):
         characteristic_value, is_new = get_or_create_characteristic_value(request.data)
@@ -114,6 +130,8 @@ class CharacteristicValueAPIViewSet(ModelViewSet):
 class BrandAPIViewSet(ModelViewSet):
     serializer_class = BrandSerializer
     queryset = Brand.objects.all()
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
 
     def create(self, request, *args, **kwargs):
         brand, is_new = get_or_create_brand(request.data)

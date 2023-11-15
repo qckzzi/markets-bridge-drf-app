@@ -1,13 +1,10 @@
-from decimal import (
-    Decimal,
-)
-
 from django.db import (
     models,
 )
 
 from common.enums import (
     MarketplaceTypeEnum,
+    VatRate,
 )
 
 
@@ -32,7 +29,7 @@ class Marketplace(models.Model):
     )
 
     def __str__(self):
-        return self.name
+        return f'{self.name} (ID: {self.pk})'
 
     class Meta:
         verbose_name = 'Маркетплейс'
@@ -43,11 +40,8 @@ class Currency(models.Model):
     name = models.CharField(verbose_name='Наименование валюты', max_length=100)
     code = models.CharField(verbose_name='Код валюты', max_length=3)
 
-    def __repr__(self):
-        return f'{self.__str__()} (id: {self.id})'
-
     def __str__(self):
-        return self.name
+        return f'{self.name} ({self.code})'
 
     class Meta:
         verbose_name = 'Валюта'
@@ -55,9 +49,10 @@ class Currency(models.Model):
 
 
 class SystemSettingConfig(models.Model):
-    vat_rate = models.PositiveSmallIntegerField(
-        verbose_name='Ставка НДС, %',
-        default=0,
+    vat_rate = models.CharField(
+        verbose_name='Ставка НДС',
+        choices=VatRate.get_choices(),
+        default=VatRate.NON_TAXABLE,
     )
     is_selected = models.BooleanField(
         verbose_name='Активная конфигурация',
@@ -114,7 +109,7 @@ class CharacteristicMatching(models.Model):
         verbose_name='Сопоставление категорий',
     )
     recipient_characteristic = models.ForeignKey(
-        'recipient.Characteristic',
+        'recipient.CharacteristicForCategory',
         on_delete=models.CASCADE,
         verbose_name='Характеристика получателя',
     )
@@ -176,3 +171,43 @@ class CharacteristicValueMatching(models.Model):
     class Meta:
         verbose_name = 'Сопоставление значений характеристик'
         verbose_name_plural = 'Сопоставления значений характеристик'
+
+
+class Log(models.Model):
+    service_name = models.CharField(
+        max_length=255,
+        verbose_name='Наименование сервиса',
+    )
+    entry = models.TextField(
+        verbose_name='Запись',
+    )
+    timestamp = models.DateTimeField(
+        verbose_name='Timestamp',
+        auto_now_add=True,
+    )
+
+    class Meta:
+        verbose_name = 'Логи'
+        verbose_name_plural = 'Записи в логах'
+
+    def __str__(self):
+        return f'{self.service_name} log (ID: {self.pk})'
+
+
+class SystemEnvironment(models.Model):
+    key = models.CharField(
+        max_length=255,
+        verbose_name='Ключ',
+        primary_key=True,
+        unique=True,
+    )
+    value = models.TextField(
+        verbose_name='Значение',
+    )
+
+    class Meta:
+        verbose_name = 'Системная переменная'
+        verbose_name_plural = 'Системные переменные'
+
+    def __str__(self):
+        return f'{self.key}: {self.value}'

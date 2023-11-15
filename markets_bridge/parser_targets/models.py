@@ -22,11 +22,8 @@ class RawCategory(models.Model):
         verbose_name='Маркетплейс-поставщик',
     )
 
-    def __repr__(self):
-        return f'{self.__str__()} (id: {self.id})'
-
     def __str__(self):
-        return self.name
+        return f'{self.name} (ID: {self.id})'
 
     class Meta:
         verbose_name = 'Категория'
@@ -52,11 +49,8 @@ class RawProduct(models.Model):
         verbose_name='Маркетплейс-поставщик',
     )
 
-    def __repr__(self):
-        return f'{self.__str__()} (id: {self.id})'
-
     def __str__(self):
-        return self.name
+        return f'{self.name} (ID: {self.id})'
 
     class Meta:
         verbose_name = 'Товар'

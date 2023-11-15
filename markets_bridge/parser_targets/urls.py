@@ -7,8 +7,8 @@ from rest_framework.routers import (
 )
 
 from parser_targets.views import (
-    RawCategoryAPI,
-    RawProductAPI,
+    RawCategoryAPIViewSet,
+    RawProductAPIViewSet,
 )
 
 
@@ -17,11 +17,11 @@ app_name = 'parser_targets'
 router = DefaultRouter()
 router.register(
     r'categories',
-    RawCategoryAPI,
+    RawCategoryAPIViewSet,
 )
 router.register(
     r'products',
-    RawProductAPI,
+    RawProductAPIViewSet,
 )
 
 urlpatterns = [

@@ -3,6 +3,9 @@ from decimal import (
     Decimal,
 )
 
+from django.db.transaction import (
+    atomic,
+)
 from rest_framework.generics import (
     get_object_or_404,
 )
@@ -20,8 +23,12 @@ from provider.models import (
     Product,
     ProductValue,
 )
+from recipient.models import (
+    CharacteristicValue as RecipientCharacteristicValue,
+)
 
 
+@atomic
 def create_or_update_product(product_data: dict) -> tuple[Product, bool]:
     """Создает товар, либо обновляет его."""
 
@@ -86,6 +93,7 @@ def get_or_create_category(category_data: dict) -> tuple[Category, bool]:
     return category, is_new
 
 
+@atomic
 def update_or_create_characteristic(characteristic_data: dict) -> tuple[Characteristic, bool]:
     """Создает новую характеристику, либо обновляет ее связи с категориями."""
 
@@ -144,12 +152,12 @@ def create_category_matching(category_id) -> CategoryMatching:
 
 # TODO: Логика выгрузки товара должна быть переделана, DRF не должен формировать данные под формат озона
 #       Писалось на скорую руку...
+@atomic
 def get_products_for_ozon(host: str) -> dict:
     result = []
 
     products = Product.objects.filter(
         is_export_allowed=True,
-        upload_date__isnull=True,
     )
 
     for product in products:
@@ -171,11 +179,7 @@ def get_products_for_ozon(host: str) -> dict:
                     dict(
                         complex_id=0,
                         id=recipient_value.characteristic.external_id,
-                        values=[
-                            dict(
-                                dictionary_value_id=recipient_value.external_id,
-                            )
-                        ]
+                        values=[dict(dictionary_value_id=recipient_value.external_id)]
                     )
                 )
 
@@ -187,12 +191,8 @@ def get_products_for_ozon(host: str) -> dict:
             attributes.append(
                 dict(
                     complex_id=0,
-                    id=matching.recipient_characteristic.external_id,
-                    values=[
-                        dict(
-                            dictionary_value_id=matching.recipient_value.external_id
-                        )
-                    ]
+                    id=matching.recipient_characteristic.characteristic.external_id,
+                    values=[dict(dictionary_value_id=matching.recipient_value.external_id)]
                 )
             )
 
@@ -204,47 +204,68 @@ def get_products_for_ozon(host: str) -> dict:
             attributes.append(
                 dict(
                     complex_id=0,
-                    id=matching.recipient_characteristic.external_id,
-                    values=[
-                        dict(
-                            value=matching.value
-                        )
-                    ]
+                    id=matching.recipient_characteristic.characteristic.external_id,
+                    values=[dict(value=matching.value)]
+                )
+            )
+
+        try:
+            brand_external_id = RecipientCharacteristicValue.objects.only(
+                'external_id',
+            ).get(
+                value__icontains=product.brand.name,
+                characteristic__external_id=85,
+                marketplace_id=2,
+            ).external_id
+        except RecipientCharacteristicValue.DoesNotExist:
+            attributes.append(
+                dict(
+                    complex_id=0,
+                    id=85,
+                    values=[dict(value='Нет бренда')]
+                )
+            )
+        else:
+            attributes.append(
+                dict(
+                    complex_id=0,
+                    id=85,
+                    values=[dict(dictionary_value_id=brand_external_id)]
                 )
             )
 
         attributes.append(
             dict(
                 complex_id=0,
-                id=85,
-                values=[
-                    dict(
-                        value='Нет бренда'
-                    )
-                ]
+                id=9048,
+                values=[dict(value=product.translated_name)]
             )
         )
+
+        product_name = f'{product.brand.name} {product.translated_name} {product.product_code}'
 
         attributes.append(
             dict(
                 complex_id=0,
-                id=9048,
-                values=[
-                    dict(
-                        value=product.translated_name
-                    )
-                ]
+                id=4180,
+                values=[dict(value=product_name)]
             )
         )
 
+        vat = SystemSettingConfig.objects.only(
+            'vat_rate',
+        ).get(
+            is_selected=True,
+        ).vat_rate
+        
         raw_product = dict(
             attributes=attributes,
-            name=product.translated_name,
+            name=product_name,
             description_category_id=recipient_category.external_id,
             images=[f'{host}{image_record.image.url}' for image_record in product.images.all()],
             offer_id=str(product.id),
             price=str(get_converted_product_price(product.discounted_price, product.markup)),
-            vat='0.1'
+            vat=vat,
         )
 
         if product.price != product.discounted_price:
@@ -258,6 +279,7 @@ def get_products_for_ozon(host: str) -> dict:
     return dict(items=result) if result else {}
 
 
+@atomic
 def get_products_for_price_update():
     result = []
 
@@ -281,9 +303,13 @@ def get_products_for_price_update():
 
         result.append(raw_product)
 
+        product.upload_date = datetime.datetime.now()
+        product.save()
+
     return dict(prices=result) if result else {}
 
 
+@atomic
 def get_products_for_stock_update():
     result = []
 
@@ -299,6 +325,9 @@ def get_products_for_stock_update():
         )
 
         result.append(raw_product)
+
+        product.upload_date = datetime.datetime.now()
+        product.save()
 
     return dict(stocks=result) if result else {}
 

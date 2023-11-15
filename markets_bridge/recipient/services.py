@@ -1,9 +1,8 @@
 from django.db.models import (
-    F,
     QuerySet,
 )
-from django.http import (
-    Http404,
+from django.db.transaction import (
+    atomic,
 )
 from rest_framework.generics import (
     get_object_or_404,
@@ -12,10 +11,12 @@ from rest_framework.generics import (
 from recipient.models import (
     Category,
     Characteristic,
+    CharacteristicForCategory,
     CharacteristicValue,
 )
 
 
+@atomic
 def update_or_create_category(category_data: dict) -> tuple[Category, bool]:
     """Создаёт новую категорию, либо обновляет связь с ее родителем."""
 
@@ -48,8 +49,9 @@ def update_or_create_characteristic(characteristic_data: dict) -> tuple[Characte
     """Создает новую характеристику, либо обновляет ее связи с категориями."""
 
     external_id = characteristic_data.get('external_id')
-    category_external_ids = characteristic_data.pop('category_external_ids')
+    category_external_id = characteristic_data.pop('category_external_id')
     marketplace_id = characteristic_data.get('marketplace_id')
+    is_required_characteristic = characteristic_data.pop('is_required')
 
     characteristic, is_new = Characteristic.objects.get_or_create(
         external_id=external_id,
@@ -57,15 +59,16 @@ def update_or_create_characteristic(characteristic_data: dict) -> tuple[Characte
         defaults=characteristic_data,
     )
 
-    categories = Category.objects.filter(
-        external_id__in=category_external_ids,
+    category = Category.objects.get(
+        external_id=category_external_id,
         marketplace_id=marketplace_id,
     )
 
-    if is_new:
-        characteristic.categories.set(categories)
-    else:
-        characteristic.categories.add(*categories)
+    CharacteristicForCategory.objects.get_or_create(
+        category=category,
+        characteristic=characteristic,
+        defaults={'is_required': is_required_characteristic},
+    )
 
     return characteristic, is_new
 
@@ -94,13 +97,14 @@ def update_or_create_characteristic_value(value_data: dict) -> tuple[Characteris
     return characteristic_value, is_new
 
 
-def get_matched_category_external_ids() -> QuerySet[Category]:
+def get_matched_category_external_ids() -> QuerySet[int]:
     """Возвращает категории получателя, сопоставленные с категориями поставщика."""
 
     categories = Category.objects.filter(
         matchings__isnull=False,
-    ).values(
+    ).values_list(
         'external_id',
+        flat=True,
     ).distinct()
 
     return categories

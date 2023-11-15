@@ -36,8 +36,6 @@ class Migration(migrations.Migration):
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('external_id', models.PositiveIntegerField(db_index=True, verbose_name='Внешний id в системе получателя')),
                 ('name', models.CharField(max_length=100, verbose_name='Наименование')),
-                ('is_required', models.BooleanField(default=False, verbose_name='Обязательная характеристика')),
-                ('categories', models.ManyToManyField(related_name='characteristics', to='recipient.category', verbose_name='Категории в системе получателя')),
             ],
             options={
                 'verbose_name': 'Характеристика товара с системе получателя',

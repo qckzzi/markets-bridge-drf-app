@@ -141,7 +141,7 @@ class Brand(models.Model):
     )
 
     def __str__(self):
-        return f'{self.name} ({self.marketplace})'
+        return self.name
 
     class Meta:
         verbose_name = 'Бренд в системе поставщика'
@@ -230,7 +230,7 @@ class Product(models.Model):
         'provider.CharacteristicValue',
         verbose_name='Значение характеристики в системе поставщика',
         related_name='products',
-        through='ProductValue',
+        through='provider.ProductValue',
     )
     marketplace = models.ForeignKey(
         'common.Marketplace',
@@ -281,9 +281,6 @@ class ProductImage(models.Model):
         on_delete=models.CASCADE,
         related_name='images',
     )
-
-    def __str__(self):
-        return f'{self.image.name} ({self.product.name}'
 
     class Meta:
         verbose_name = 'Изображение товара'
