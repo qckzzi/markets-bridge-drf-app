@@ -4,6 +4,7 @@ from django.db import (
 
 from common.enums import (
     MarketplaceTypeEnum,
+    VatRate,
 )
 
 
@@ -51,9 +52,10 @@ class Currency(models.Model):
 
 
 class SystemSettingConfig(models.Model):
-    vat_rate = models.PositiveSmallIntegerField(
-        verbose_name='Ставка НДС, %',
-        default=0,
+    vat_rate = models.CharField(
+        verbose_name='Ставка НДС',
+        choices=VatRate.get_choices(),
+        default=VatRate.NON_TAXABLE,
     )
     is_selected = models.BooleanField(
         verbose_name='Активная конфигурация',

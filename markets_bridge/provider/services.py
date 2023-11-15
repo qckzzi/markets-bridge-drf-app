@@ -20,6 +20,9 @@ from provider.models import (
     Product,
     ProductValue,
 )
+from recipient.models import (
+    CharacteristicValue as RecipientCharacteristicValue,
+)
 
 
 def create_or_update_product(product_data: dict) -> tuple[Product, bool]:
@@ -149,7 +152,6 @@ def get_products_for_ozon(host: str) -> dict:
 
     products = Product.objects.filter(
         is_export_allowed=True,
-        upload_date__isnull=True,
     )
 
     for product in products:
@@ -171,11 +173,7 @@ def get_products_for_ozon(host: str) -> dict:
                     dict(
                         complex_id=0,
                         id=recipient_value.characteristic.external_id,
-                        values=[
-                            dict(
-                                dictionary_value_id=recipient_value.external_id,
-                            )
-                        ]
+                        values=[dict(dictionary_value_id=recipient_value.external_id)]
                     )
                 )
 
@@ -188,11 +186,7 @@ def get_products_for_ozon(host: str) -> dict:
                 dict(
                     complex_id=0,
                     id=matching.recipient_characteristic.external_id,
-                    values=[
-                        dict(
-                            dictionary_value_id=matching.recipient_value.external_id
-                        )
-                    ]
+                    values=[dict(dictionary_value_id=matching.recipient_value.external_id)]
                 )
             )
 
@@ -205,46 +199,67 @@ def get_products_for_ozon(host: str) -> dict:
                 dict(
                     complex_id=0,
                     id=matching.recipient_characteristic.external_id,
-                    values=[
-                        dict(
-                            value=matching.value
-                        )
-                    ]
+                    values=[dict(value=matching.value)]
+                )
+            )
+
+        try:
+            brand_external_id = RecipientCharacteristicValue.objects.only(
+                'external_id',
+            ).get(
+                value__icontains=product.brand.name,
+                characteristic_id=85,
+                marketplace_id=2,
+            ).external_id
+        except RecipientCharacteristicValue.DoesNotExist:
+            attributes.append(
+                dict(
+                    complex_id=0,
+                    id=85,
+                    values=[dict(value='Нет бренда')]
+                )
+            )
+        else:
+            attributes.append(
+                dict(
+                    complex_id=0,
+                    id=85,
+                    values=[dict(dictionary_value_id=brand_external_id)]
                 )
             )
 
         attributes.append(
             dict(
                 complex_id=0,
-                id=85,
-                values=[
-                    dict(
-                        value='Нет бренда'
-                    )
-                ]
+                id=9048,
+                values=[dict(value=product.translated_name)]
             )
         )
+
+        product_name = f'{product.brand.name} {product.translated_name} {product.product_code}'
 
         attributes.append(
             dict(
                 complex_id=0,
-                id=9048,
-                values=[
-                    dict(
-                        value=product.translated_name
-                    )
-                ]
+                id=4180,
+                values=[dict(value=product_name)]
             )
         )
 
+        vat = SystemSettingConfig.objects.only(
+            'vat_rate',
+        ).get(
+            is_selected=True,
+        ).vat_rate
+        
         raw_product = dict(
             attributes=attributes,
-            name=product.translated_name,
+            name=product_name,
             description_category_id=recipient_category.external_id,
             images=[f'{host}{image_record.image.url}' for image_record in product.images.all()],
             offer_id=str(product.id),
             price=str(get_converted_product_price(product.discounted_price, product.markup)),
-            vat='0.1'
+            vat=vat,
         )
 
         if product.price != product.discounted_price:

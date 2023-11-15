@@ -51,12 +51,15 @@ class CategoryMatchingAdmin(admin.ModelAdmin):
 
     list_per_page = 10
 
-    def characteristic_mathing_button(self, mathing):
-        if mathing.recipient_category:
-            url = reverse('admin:common_characteristicmatching_changelist') + f'?category_matching_id={mathing.id}'
-            result = format_html(f'<a href="{url}" class="button" target="_blank">Сопоставить характеристики</a>')
+    def characteristic_mathing_button(self, matching):
+        if matching.recipient_category:
+            if not matching.characteristic_matchings.exists():
+                result = format_html('Характеристики для категории пока не загружены')
+            else:
+                url = reverse('admin:common_characteristicmatching_changelist') + f'?category_matching_id={matching.id}'
+                result = format_html(f'<a href="{url}" class="button" target="_blank">Сопоставить характеристики</a>')
         else:
-            result = format_html('')
+            result = format_html('Для сопоставления характеристик необходимо сопоставить категорию')
 
         return result
 

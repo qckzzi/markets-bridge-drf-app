@@ -1,9 +1,28 @@
-import requests
+import json
+
+from markets_bridge.amqp import (
+    publish,
+)
+from recipient.enums import (
+    LoadingOperationType,
+)
 
 
-def update_recipient_attributes(external_category_id: int):
-    # TODO: Вынести в конфиг
-    requests.get(
-        'http://127.0.0.1:8001/load_ozon_attributes_for_category/',
-        params={'category_id': external_category_id},
-    )
+def update_recipient_attributes(category_external_id: int, matching_id: int):
+    message = {
+        'category_external_id': category_external_id,
+        'matching_id': matching_id,
+        'method': LoadingOperationType.LOAD_FOR_CATEGORY,
+    }
+    publish_to_loading_queue(json.dumps(message))
+
+
+def update_recipient_categories():
+    message = {
+        'method': LoadingOperationType.LOAD_CATEGORIES,
+    }
+    publish_to_loading_queue(json.dumps(message))
+
+
+def publish_to_loading_queue(message: str):
+    publish(message, 'inloading')

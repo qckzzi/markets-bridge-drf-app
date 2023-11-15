@@ -20,9 +20,9 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-SECRET_KEY = 'django-insecure-i-r%n!avyo^r88#=w14((r0b1p)oy9l8&x##$9dh)=3ft7*57w'
+SECRET_KEY = os.getenv('SECRET_KEY')
 
-DEBUG = True
+DEBUG = os.getenv('DEBUG').lower() == 'true'
 
 DOMAIN = os.getenv('HOST')
 ALLOWED_HOSTS = [DOMAIN, 'localhost', '127.0.0.1']
@@ -60,7 +60,7 @@ ROOT_URLCONF = 'markets_bridge.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': ['templates'],
+        'DIRS': [],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

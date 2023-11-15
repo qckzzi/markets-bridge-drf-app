@@ -7,6 +7,7 @@ from rest_framework.routers import (
 )
 
 from common.views import (
+    CharacteristicMatchingAPIViewSet,
     LogsAPIViewSet,
     SystemEnvironmentsAPIViewSet,
 )
@@ -21,6 +22,11 @@ router.register(
     r'logs',
     LogsAPIViewSet,
     basename='log',
+)
+router.register(
+    r'characteristic_matchings',
+    CharacteristicMatchingAPIViewSet,
+    basename='characteristic_matching',
 )
 
 urlpatterns = [
