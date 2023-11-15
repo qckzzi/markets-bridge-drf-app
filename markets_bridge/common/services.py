@@ -1,3 +1,7 @@
+from django.db.transaction import (
+    atomic,
+)
+
 from common.models import (
     CategoryMatching,
     CharacteristicMatching,
@@ -22,6 +26,7 @@ def get_system_environments():
     return SystemEnvironment.objects.all()
 
 
+@atomic
 def create_characteristic_matchings_by_category_matching_id(category_matching_id: int):
     category_matching = CategoryMatching.objects.get(
         id=category_matching_id,

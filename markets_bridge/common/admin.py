@@ -70,13 +70,11 @@ class CategoryMatchingAdmin(admin.ModelAdmin):
 class CharacteristicMatchingAdmin(admin.ModelAdmin):
     list_display = (
         'recipient_characteristic',
-        'provider_characteristic',
         'recipient_value',
         'is_raw',
         'value',
     )
     list_editable = (
-        'provider_characteristic',
         'value',
         'recipient_value',
     )
@@ -85,7 +83,7 @@ class CharacteristicMatchingAdmin(admin.ModelAdmin):
         'recipient_value',
     )
     list_filter = ('recipient_characteristic__is_required',)
-    fields = ('recipient_characteristic', 'provider_characteristic', 'values_mathing_button', 'value')
+    fields = ('recipient_characteristic', 'values_mathing_button', 'value')
     readonly_fields = (
         'values_mathing_button',
         'recipient_characteristic',
@@ -96,7 +94,7 @@ class CharacteristicMatchingAdmin(admin.ModelAdmin):
     list_per_page = 10
 
     def values_mathing_button(self, mathing):
-        if mathing.recipient_characteristic.has_reference_values:
+        if mathing.recipient_characteristic.characteristic.has_reference_values:
             url = (
                     reverse('admin:common_characteristicvaluematching_changelist')
                     + f'?characteristic_matching_id={mathing.id}'
@@ -110,7 +108,7 @@ class CharacteristicMatchingAdmin(admin.ModelAdmin):
     values_mathing_button.short_description = ''
 
     def is_raw(self, mathing):
-        return not mathing.recipient_characteristic.has_reference_values
+        return not mathing.recipient_characteristic.characteristic.has_reference_values
 
     is_raw.short_description = 'Является "сырым" значением'
     is_raw.boolean = True
@@ -122,6 +120,8 @@ class CharacteristicValueMatchingAdmin(admin.ModelAdmin):
     list_editable = ('provider_characteristic_value',)
     autocomplete_fields = ('provider_characteristic_value',)
     search_fields = ('recipient_characteristic_value__value',)
+    readonly_fields = ('recipient_characteristic_value',)
+    fields = ('recipient_characteristic_value', 'provider_characteristic_value')
 
 
 @admin.register(Log)

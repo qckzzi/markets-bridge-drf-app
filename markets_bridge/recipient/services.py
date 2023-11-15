@@ -1,6 +1,9 @@
 from django.db.models import (
     QuerySet,
 )
+from django.db.transaction import (
+    atomic,
+)
 from rest_framework.generics import (
     get_object_or_404,
 )
@@ -13,6 +16,7 @@ from recipient.models import (
 )
 
 
+@atomic
 def update_or_create_category(category_data: dict) -> tuple[Category, bool]:
     """Создаёт новую категорию, либо обновляет связь с ее родителем."""
 
@@ -93,13 +97,14 @@ def update_or_create_characteristic_value(value_data: dict) -> tuple[Characteris
     return characteristic_value, is_new
 
 
-def get_matched_category_external_ids() -> QuerySet[Category]:
+def get_matched_category_external_ids() -> QuerySet[int]:
     """Возвращает категории получателя, сопоставленные с категориями поставщика."""
 
     categories = Category.objects.filter(
         matchings__isnull=False,
-    ).values(
+    ).values_list(
         'external_id',
+        flat=True,
     ).distinct()
 
     return categories

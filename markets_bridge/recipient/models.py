@@ -55,6 +55,9 @@ class CharacteristicForCategory(models.Model):
         verbose_name = 'Связь категория-характеристика'
         verbose_name_plural = 'Связи категория-характеристика'
 
+    def __str__(self):
+        return f'{self.characteristic}{"*" if self.is_required else ""}'
+
 
 class Characteristic(models.Model):
     external_id = models.PositiveIntegerField(

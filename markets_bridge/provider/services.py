@@ -3,6 +3,9 @@ from decimal import (
     Decimal,
 )
 
+from django.db.transaction import (
+    atomic,
+)
 from rest_framework.generics import (
     get_object_or_404,
 )
@@ -25,6 +28,7 @@ from recipient.models import (
 )
 
 
+@atomic
 def create_or_update_product(product_data: dict) -> tuple[Product, bool]:
     """Создает товар, либо обновляет его."""
 
@@ -89,6 +93,7 @@ def get_or_create_category(category_data: dict) -> tuple[Category, bool]:
     return category, is_new
 
 
+@atomic
 def update_or_create_characteristic(characteristic_data: dict) -> tuple[Characteristic, bool]:
     """Создает новую характеристику, либо обновляет ее связи с категориями."""
 
@@ -147,6 +152,7 @@ def create_category_matching(category_id) -> CategoryMatching:
 
 # TODO: Логика выгрузки товара должна быть переделана, DRF не должен формировать данные под формат озона
 #       Писалось на скорую руку...
+@atomic
 def get_products_for_ozon(host: str) -> dict:
     result = []
 
@@ -185,7 +191,7 @@ def get_products_for_ozon(host: str) -> dict:
             attributes.append(
                 dict(
                     complex_id=0,
-                    id=matching.recipient_characteristic.external_id,
+                    id=matching.recipient_characteristic.characteristic.external_id,
                     values=[dict(dictionary_value_id=matching.recipient_value.external_id)]
                 )
             )
@@ -198,7 +204,7 @@ def get_products_for_ozon(host: str) -> dict:
             attributes.append(
                 dict(
                     complex_id=0,
-                    id=matching.recipient_characteristic.external_id,
+                    id=matching.recipient_characteristic.characteristic.external_id,
                     values=[dict(value=matching.value)]
                 )
             )
@@ -208,7 +214,7 @@ def get_products_for_ozon(host: str) -> dict:
                 'external_id',
             ).get(
                 value__icontains=product.brand.name,
-                characteristic_id=85,
+                characteristic__external_id=85,
                 marketplace_id=2,
             ).external_id
         except RecipientCharacteristicValue.DoesNotExist:
@@ -273,6 +279,7 @@ def get_products_for_ozon(host: str) -> dict:
     return dict(items=result) if result else {}
 
 
+@atomic
 def get_products_for_price_update():
     result = []
 
@@ -296,9 +303,13 @@ def get_products_for_price_update():
 
         result.append(raw_product)
 
+        product.upload_date = datetime.datetime.now()
+        product.save()
+
     return dict(prices=result) if result else {}
 
 
+@atomic
 def get_products_for_stock_update():
     result = []
 
@@ -314,6 +325,9 @@ def get_products_for_stock_update():
         )
 
         result.append(raw_product)
+
+        product.upload_date = datetime.datetime.now()
+        product.save()
 
     return dict(stocks=result) if result else {}
 

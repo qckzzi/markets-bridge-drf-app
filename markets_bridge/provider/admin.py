@@ -24,6 +24,7 @@ from provider.models import (
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ('external_id', 'name', 'translated_name', 'marketplace')
     search_fields = ('external_id', 'name', 'translated_name',)
+    readonly_fields = ('external_id', 'name', 'marketplace')
 
 
 @admin.register(Characteristic)
@@ -31,12 +32,14 @@ class CharacteristicAdmin(admin.ModelAdmin):
     filter_horizontal = ('categories',)
     list_display = ('external_id', 'name', 'translated_name')
     search_fields = ('external_id', 'name', 'translated_name')
+    readonly_fields = ('external_id', 'name', 'marketplace', 'categories')
 
 
 @admin.register(CharacteristicValue)
 class CharacteristicValueAdmin(admin.ModelAdmin):
     list_display = ('external_id', 'value', 'translated_value', 'characteristic')
     search_fields = ('external_id', 'value', 'translated_value')
+    readonly_fields = ('external_id', 'value', 'marketplace', 'characteristic')
 
 
 class ProductValueAdmin(admin.TabularInline):
@@ -146,4 +149,5 @@ class ProductAdmin(admin.ModelAdmin):
 @admin.register(Brand)
 class BrandAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'marketplace')
+    readonly_fields = ('id', 'marketplace')
 
