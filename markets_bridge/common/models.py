@@ -48,6 +48,36 @@ class Currency(models.Model):
         verbose_name_plural = 'Валюты'
 
 
+class ExchangeRate(models.Model):
+    source = models.OneToOneField(
+        'common.Currency',
+        on_delete=models.CASCADE,
+        verbose_name='Исходная валюта',
+        related_name='source_exchange_rates'
+    )
+    destination = models.OneToOneField(
+        'common.Currency',
+        on_delete=models.CASCADE,
+        verbose_name='Валюта назначения',
+        related_name='destination_exchange_rate'
+    )
+    rate = models.DecimalField(
+        decimal_places=4,
+        max_digits=5,
+        verbose_name='Курс',
+    )
+    rate_datetime = models.DateTimeField(
+        verbose_name='Последнее время обновления курса',
+    )
+
+    def __str__(self):
+        return f'{self.source} | {self.destination}'
+
+    class Meta:
+        verbose_name = 'Курс валют'
+        verbose_name_plural = 'Курсы валют'
+
+
 class SystemSettingConfig(models.Model):
     vat_rate = models.CharField(
         verbose_name='Ставка НДС',

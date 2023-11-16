@@ -1,12 +1,24 @@
+import logging
+
 from django.db.transaction import (
     atomic,
 )
 
+from common.enums import (
+    MarketplaceTypeEnum,
+)
 from common.models import (
     CategoryMatching,
     CharacteristicMatching,
     CharacteristicValueMatching,
+    Currency,
+    ExchangeRate,
+    Log,
+    Marketplace,
     SystemEnvironment,
+)
+from common.utils import (
+    get_exchange_rate,
 )
 from recipient.models import (
     CharacteristicForCategory,
@@ -62,3 +74,55 @@ def create_characteristic_matchings_by_category_matching_id(category_matching_id
         ]
 
         CharacteristicValueMatching.objects.bulk_create(char_value_mathing_list)
+
+
+def update_or_create_exchange_rates():
+    providers = get_providers()
+    recipients = get_recipients()
+
+    provider_currencies = Currency.objects.filter(
+        marketplaces__in=providers,
+    )
+    recipient_currencies = Currency.objects.filter(
+        marketplaces__in=recipients,
+    )
+
+    for provider_currency in provider_currencies:
+        for recipient_currency in recipient_currencies:
+            decimal_rate, rate_datetime = get_exchange_rate(provider_currency.code, recipient_currency.code)
+            exchange_rate, is_new = ExchangeRate.objects.update_or_create(
+                source=provider_currency,
+                destination=recipient_currency,
+                defaults={'rate': decimal_rate, 'rate_datetime': rate_datetime},
+            )
+
+            logging.info(f'{exchange_rate} exchange rate has been {"created" if is_new else "updated"}')
+
+
+def get_providers():
+    all_marketplaces = get_marketplaces()
+
+    return all_marketplaces.filter(
+        type=MarketplaceTypeEnum.PROVIDER,
+    )
+
+
+def get_recipients():
+    all_marketplaces = get_marketplaces()
+
+    return all_marketplaces.filter(
+        type=MarketplaceTypeEnum.RECIPIENT,
+    )
+
+
+def get_marketplaces():
+    return Marketplace.objects.select_related(
+        'currency',
+    )
+
+
+def write_log(message: str):
+    Log.objects.create(
+        service_name='Markets-Bridge',
+        entry=message,
+    )

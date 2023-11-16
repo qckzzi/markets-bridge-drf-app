@@ -13,10 +13,14 @@ from common.models import (
     CharacteristicMatching,
     CharacteristicValueMatching,
     Currency,
+    ExchangeRate,
     Log,
     Marketplace,
     SystemEnvironment,
     SystemSettingConfig,
+)
+from core.admin import (
+    ReadOnlyModelAdmin,
 )
 
 
@@ -34,6 +38,16 @@ class MarketplaceAdmin(admin.ModelAdmin):
 @admin.register(Currency)
 class CurrencyAdmin(admin.ModelAdmin):
     pass
+
+
+@admin.register(ExchangeRate)
+class ExchangeRateAdmin(ReadOnlyModelAdmin):
+    list_display = (
+        'source',
+        'destination',
+        'rate',
+        'rate_datetime',
+    )
 
 
 @admin.register(SystemSettingConfig)
