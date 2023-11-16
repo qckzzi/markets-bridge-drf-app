@@ -1,4 +1,5 @@
 import datetime
+import logging
 from decimal import (
     Decimal,
 )
@@ -13,7 +14,11 @@ from rest_framework.generics import (
 from common.models import (
     CategoryMatching,
     CharacteristicValueMatching,
+    ExchangeRate,
     SystemSettingConfig,
+)
+from common.services import (
+    write_log,
 )
 from provider.models import (
     Brand,
@@ -158,12 +163,22 @@ def get_products_for_ozon(host: str) -> dict:
 
     products = Product.objects.filter(
         is_export_allowed=True,
+    ).select_related(
+        'brand',
+        'marketplace__currency',
     )
 
     for product in products:
         attributes = []
         category_matching = product.category.matching
         recipient_category = category_matching.recipient_category
+
+        if not recipient_category:
+            error = f'У товара {product} с ID: {product.id} не сопоставлена категория'
+            logging.info(error)
+            write_log(error)
+
+            continue
 
         product_characteristic_values = product.characteristic_values.all()
 
@@ -257,19 +272,23 @@ def get_products_for_ozon(host: str) -> dict:
         ).get(
             is_selected=True,
         ).vat_rate
+
+        currency_code = product.marketplace.currency.code
+        product_price = get_converted_product_price(currency_code, product.discounted_price, product.markup)
         
         raw_product = dict(
             attributes=attributes,
             name=product_name,
             description_category_id=recipient_category.external_id,
-            images=[f'{host}{image_record.image.url}' for image_record in product.images.all()],
+            images=[f'https://{host}{image_record.image.url}' for image_record in product.images.all()],
             offer_id=str(product.id),
-            price=str(get_converted_product_price(product.discounted_price, product.markup)),
+            price=str(product_price),
             vat=vat,
         )
 
         if product.price != product.discounted_price:
-            raw_product['old_price'] = str(get_converted_product_price(product.price, product.markup))
+            old_price = get_converted_product_price(currency_code, product.price, product.markup)
+            raw_product['old_price'] = str(old_price)
 
         result.append(raw_product)
 
@@ -286,10 +305,13 @@ def get_products_for_price_update():
     products = Product.objects.filter(
         is_export_allowed=True,
         upload_date__isnull=False,
+    ).select_related(
+        'marketplace__currency',
     )
 
     for product in products:
-        product_price = get_converted_product_price(product.discounted_price, product.markup)
+        currency_code = product.marketplace.currency.code
+        product_price = get_converted_product_price(currency_code, product.discounted_price, product.markup)
         raw_product = dict(
             offer_id=str(product.id),
             price=str(product_price),
@@ -297,7 +319,8 @@ def get_products_for_price_update():
         )
 
         if product.price != product.discounted_price:
-            raw_product['old_price'] = str(get_converted_product_price(product.price, product.markup))
+            old_price = get_converted_product_price(currency_code, product.price, product.markup)
+            raw_product['old_price'] = str(old_price)
         else:
             raw_product['old_price'] = '0'
 
@@ -332,11 +355,17 @@ def get_products_for_stock_update():
     return dict(stocks=result) if result else {}
 
 
-def get_converted_product_price(price: Decimal, markup: int):
-    # TODO: Написать конвертер валют
-    converted_price = price * Decimal('3.22')
+# TODO: Переделать функцию по мере масштабирования,
+#       вместо явного 'RUB' нужно будет конвертировать сумму для каждого маркетплейса-получателя
+def get_converted_product_price(source: str, price: Decimal | int | float, markup: Decimal | int | float):
+    exchange_rate = ExchangeRate.objects.get(
+        source__code=source,
+        destination__code='RUB',
+    )
 
-    return converted_price + converted_price * Decimal((markup/100))
+    converted_price = price * exchange_rate.rate
+
+    return converted_price + converted_price * Decimal(markup/100)
 
 
 def get_or_create_brand(brand_data: dict) -> tuple[Brand, bool]:
