@@ -15,6 +15,7 @@ from common.models import (
     Currency,
     ExchangeRate,
     Log,
+    Logistics,
     Marketplace,
     SystemEnvironment,
     SystemSettingConfig,
@@ -32,6 +33,7 @@ class MarketplaceAdmin(admin.ModelAdmin):
         'url',
         'currency',
         'type',
+        'logistics',
     )
 
 
@@ -206,4 +208,20 @@ class SystemEnvironmentAdmin(admin.ModelAdmin):
     list_display = (
         'key',
         'value',
+    )
+    list_editable = (
+        'value',
+    )
+
+
+@admin.register(Logistics)
+class LogisticsAdmin(admin.ModelAdmin):
+    list_display = (
+        'name',
+        'cost',
+        'currency',
+    )
+    list_editable = (
+        'cost',
+        'currency',
     )

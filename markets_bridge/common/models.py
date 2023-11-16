@@ -1,3 +1,7 @@
+from decimal import (
+    Decimal,
+)
+
 from django.db import (
     models,
 )
@@ -19,13 +23,18 @@ class Marketplace(models.Model):
     currency = models.ForeignKey(
         'common.Currency',
         verbose_name='Валюта',
-        on_delete=models.SET_NULL,
+        on_delete=models.PROTECT,
         null=True,
         related_name='marketplaces',
     )
     type = models.PositiveSmallIntegerField(
         verbose_name='Тип',
         choices=MarketplaceTypeEnum.get_choices(),
+    )
+    logistics = models.ForeignKey(
+        'common.Logistics',
+        on_delete=models.PROTECT,
+        verbose_name='Логистика',
     )
 
     def __str__(self):
@@ -46,6 +55,32 @@ class Currency(models.Model):
     class Meta:
         verbose_name = 'Валюта'
         verbose_name_plural = 'Валюты'
+
+
+class Logistics(models.Model):
+    name = models.CharField(
+        max_length=255,
+        verbose_name='Наименование',
+    )
+    cost = models.DecimalField(
+        decimal_places=2,
+        max_digits=8,
+        verbose_name='Стоимость за кг',
+        default=Decimal('0.00'),
+    )
+    currency = models.ForeignKey(
+        'common.Currency',
+        on_delete=models.PROTECT,
+        verbose_name='Валюта',
+        related_name='logistics',
+    )
+
+    class Meta:
+        verbose_name = 'Логистика'
+        verbose_name_plural = 'Логистика'
+
+    def __str__(self):
+        return self.name
 
 
 class ExchangeRate(models.Model):
