@@ -28,6 +28,17 @@ class CategoryAdmin(ReadOnlyModelAdmin):
         'parent_category',
     )
 
+    def get_search_results(self, request, queryset, search_term):
+        queryset, may_have_duplicates = super().get_search_results(request, queryset, search_term)
+
+        # FIXME: Бизнес-логика в UI ;(
+        queryset = queryset.filter(
+            parent_category__isnull=False,
+            children__isnull=False,
+        ).distinct()
+
+        return queryset, may_have_duplicates
+
 
 @admin.register(Characteristic)
 class CharacteristicAdmin(ReadOnlyModelAdmin):

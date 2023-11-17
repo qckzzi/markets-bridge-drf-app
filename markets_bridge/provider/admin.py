@@ -156,7 +156,7 @@ class ProductAdmin(admin.ModelAdmin):
         'brand',
         'product_url',
         ('price', 'discounted_price', 'currency', 'markup'),
-        'stock_quantity',
+        ('stock_quantity', 'weight'),
         'import_date', 
         'update_date', 
         'upload_date',

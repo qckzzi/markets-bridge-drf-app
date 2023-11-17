@@ -1,5 +1,8 @@
 import logging
 
+from django.db.models import (
+    QuerySet,
+)
 from django.db.transaction import (
     atomic,
 )
@@ -77,27 +80,31 @@ def create_characteristic_matchings_by_category_matching_id(category_matching_id
 
 
 def update_or_create_exchange_rates():
-    providers = get_providers()
-    recipients = get_recipients()
+    currencies = list(get_currencies())
 
-    provider_currencies = Currency.objects.filter(
-        marketplaces__in=providers,
+    for src_currency in currencies:
+        currencies.remove(src_currency)
+
+        for dest_currency in currencies:
+            update_exchange_rate(src_currency, dest_currency)
+            update_exchange_rate(dest_currency, src_currency)
+
+
+def get_currencies():
+    return Currency.objects.all()
+
+
+def update_exchange_rate(source: Currency, destination: Currency):
+    """Получает актуальную на данный момент информацию о курсе и записывает ее базе."""
+
+    decimal_rate, rate_datetime = get_exchange_rate(source.code, destination.code)
+    exchange_rate, is_new = ExchangeRate.objects.update_or_create(
+        source=source,
+        destination=destination,
+        defaults={'rate': decimal_rate, 'rate_datetime': rate_datetime},
     )
-    recipient_currencies = Currency.objects.filter(
-        marketplaces__in=recipients,
-    )
 
-    for provider_currency in provider_currencies:
-        for recipient_currency in recipient_currencies:
-            decimal_rate, rate_datetime = get_exchange_rate(provider_currency.code, recipient_currency.code)
-            exchange_rate, is_new = ExchangeRate.objects.update_or_create(
-                source=provider_currency,
-                destination=recipient_currency,
-                defaults={'rate': decimal_rate, 'rate_datetime': rate_datetime},
-            )
-
-            logging.info(f'{exchange_rate} exchange rate has been {"created" if is_new else "updated"}')
-
+    logging.info(f'{exchange_rate} exchange rate has been {"created" if is_new else "updated"}')
 
 def get_providers():
     all_marketplaces = get_marketplaces()

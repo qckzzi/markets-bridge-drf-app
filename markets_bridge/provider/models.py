@@ -195,11 +195,17 @@ class Product(models.Model):
     )
     markup = models.PositiveIntegerField(
         verbose_name='Коэффициент наценки стоимости товара, %',
-        default=0,
+        default=100,
     )
     stock_quantity = models.IntegerField(
         verbose_name='Количество в наличии',
         default=0,
+    )
+    weight = models.DecimalField(
+        verbose_name='Вес товара, кг',
+        decimal_places=3,
+        max_digits=6,
+        default=Decimal('0.000'),
     )
     import_date = models.DateTimeField(
         verbose_name='Дата добавления',
