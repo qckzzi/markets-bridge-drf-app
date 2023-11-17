@@ -35,6 +35,8 @@ class Marketplace(models.Model):
         'common.Logistics',
         on_delete=models.PROTECT,
         verbose_name='Логистика',
+        null=True,
+        blank=True,
     )
 
     def __str__(self):

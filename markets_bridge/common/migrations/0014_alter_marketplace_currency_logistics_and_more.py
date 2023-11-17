@@ -39,7 +39,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='marketplace',
             name='logistics',
-            field=models.ForeignKey(default=None, on_delete=django.db.models.deletion.PROTECT, to='common.logistics', verbose_name='Логистика'),
+            field=models.ForeignKey(blank=True, null=True, default=None, on_delete=django.db.models.deletion.PROTECT, to='common.logistics', verbose_name='Логистика'),
             preserve_default=False,
         ),
     ]

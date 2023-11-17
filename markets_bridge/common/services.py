@@ -1,5 +1,8 @@
 import logging
 
+from django.db.models import (
+    QuerySet,
+)
 from django.db.transaction import (
     atomic,
 )
@@ -77,27 +80,45 @@ def create_characteristic_matchings_by_category_matching_id(category_matching_id
 
 
 def update_or_create_exchange_rates():
-    providers = get_providers()
-    recipients = get_recipients()
-
-    provider_currencies = Currency.objects.filter(
-        marketplaces__in=providers,
-    )
-    recipient_currencies = Currency.objects.filter(
-        marketplaces__in=recipients,
-    )
+    provider_currencies = get_provider_currencies()
+    recipient_currencies = get_recipient_currencies()
 
     for provider_currency in provider_currencies:
         for recipient_currency in recipient_currencies:
-            decimal_rate, rate_datetime = get_exchange_rate(provider_currency.code, recipient_currency.code)
-            exchange_rate, is_new = ExchangeRate.objects.update_or_create(
-                source=provider_currency,
-                destination=recipient_currency,
-                defaults={'rate': decimal_rate, 'rate_datetime': rate_datetime},
-            )
+            update_exchange_rate(provider_currency, recipient_currency)
 
-            logging.info(f'{exchange_rate} exchange rate has been {"created" if is_new else "updated"}')
 
+def get_provider_currencies():
+    providers = get_providers()
+
+    return get_currencies_by_marketplaces(providers)
+
+
+def get_recipient_currencies():
+    recipients = get_recipients()
+
+    return get_currencies_by_marketplaces(recipients)
+
+
+def get_currencies_by_marketplaces(marketplaces: QuerySet[Marketplace]):
+    currencies = Currency.objects.filter(
+        marketplaces__in=marketplaces,
+    )
+
+    return currencies
+
+
+def update_exchange_rate(source: Currency, destination: Currency):
+    """Получает актуальную на данный момент информацию о курсе и записывает ее базе."""
+
+    decimal_rate, rate_datetime = get_exchange_rate(source.code, destination.code)
+    exchange_rate, is_new = ExchangeRate.objects.update_or_create(
+        source=source,
+        destination=destination,
+        defaults={'rate': decimal_rate, 'rate_datetime': rate_datetime},
+    )
+
+    logging.info(f'{exchange_rate} exchange rate has been {"created" if is_new else "updated"}')
 
 def get_providers():
     all_marketplaces = get_marketplaces()
