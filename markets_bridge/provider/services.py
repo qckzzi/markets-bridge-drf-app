@@ -166,7 +166,7 @@ def get_products_for_ozon(host: str) -> dict:
     ).select_related(
         'brand',
         'marketplace__currency',
-        'marketplace___logistics',
+        'marketplace__logistics',
     )
 
     for product in products:
@@ -307,7 +307,7 @@ def get_products_for_price_update():
         upload_date__isnull=False,
     ).select_related(
         'marketplace__currency',
-        'marketplace___logistics',
+        'marketplace__logistics',
     )
 
     for product in products:
