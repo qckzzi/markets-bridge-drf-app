@@ -80,32 +80,18 @@ def create_characteristic_matchings_by_category_matching_id(category_matching_id
 
 
 def update_or_create_exchange_rates():
-    provider_currencies = get_provider_currencies()
-    recipient_currencies = get_recipient_currencies()
+    currencies = list(get_currencies())
 
-    for provider_currency in provider_currencies:
-        for recipient_currency in recipient_currencies:
-            update_exchange_rate(provider_currency, recipient_currency)
+    for src_currency in currencies:
+        currencies.remove(src_currency)
 
-
-def get_provider_currencies():
-    providers = get_providers()
-
-    return get_currencies_by_marketplaces(providers)
+        for dest_currency in currencies:
+            update_exchange_rate(src_currency, dest_currency)
+            update_exchange_rate(dest_currency, src_currency)
 
 
-def get_recipient_currencies():
-    recipients = get_recipients()
-
-    return get_currencies_by_marketplaces(recipients)
-
-
-def get_currencies_by_marketplaces(marketplaces: QuerySet[Marketplace]):
-    currencies = Currency.objects.filter(
-        marketplaces__in=marketplaces,
-    )
-
-    return currencies
+def get_currencies():
+    return Currency.objects.all()
 
 
 def update_exchange_rate(source: Currency, destination: Currency):

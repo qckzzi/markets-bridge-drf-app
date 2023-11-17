@@ -86,13 +86,13 @@ class Logistics(models.Model):
 
 
 class ExchangeRate(models.Model):
-    source = models.OneToOneField(
+    source = models.ForeignKey(
         'common.Currency',
         on_delete=models.CASCADE,
         verbose_name='Исходная валюта',
         related_name='source_exchange_rates'
     )
-    destination = models.OneToOneField(
+    destination = models.ForeignKey(
         'common.Currency',
         on_delete=models.CASCADE,
         verbose_name='Валюта назначения',
@@ -100,7 +100,7 @@ class ExchangeRate(models.Model):
     )
     rate = models.DecimalField(
         decimal_places=4,
-        max_digits=5,
+        max_digits=10,
         verbose_name='Курс',
     )
     rate_datetime = models.DateTimeField(

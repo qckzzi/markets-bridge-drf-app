@@ -166,6 +166,7 @@ def get_products_for_ozon(host: str) -> dict:
     ).select_related(
         'brand',
         'marketplace__currency',
+        'marketplace___logistics',
     )
 
     for product in products:
@@ -273,8 +274,7 @@ def get_products_for_ozon(host: str) -> dict:
             is_selected=True,
         ).vat_rate
 
-        currency_code = product.marketplace.currency.code
-        product_price = get_converted_product_price(currency_code, product.discounted_price, product.markup)
+        product_price = get_converted_product_price(product)
         
         raw_product = dict(
             attributes=attributes,
@@ -287,7 +287,7 @@ def get_products_for_ozon(host: str) -> dict:
         )
 
         if product.price != product.discounted_price:
-            old_price = get_converted_product_price(currency_code, product.price, product.markup)
+            old_price = get_converted_product_price(product)
             raw_product['old_price'] = str(old_price)
 
         result.append(raw_product)
@@ -307,11 +307,11 @@ def get_products_for_price_update():
         upload_date__isnull=False,
     ).select_related(
         'marketplace__currency',
+        'marketplace___logistics',
     )
 
     for product in products:
-        currency_code = product.marketplace.currency.code
-        product_price = get_converted_product_price(currency_code, product.discounted_price, product.markup)
+        product_price = get_converted_product_price(product)
         raw_product = dict(
             offer_id=str(product.id),
             price=str(product_price),
@@ -319,7 +319,7 @@ def get_products_for_price_update():
         )
 
         if product.price != product.discounted_price:
-            old_price = get_converted_product_price(currency_code, product.price, product.markup)
+            old_price = get_converted_product_price(product)
             raw_product['old_price'] = str(old_price)
         else:
             raw_product['old_price'] = '0'
@@ -357,15 +357,22 @@ def get_products_for_stock_update():
 
 # TODO: Переделать функцию по мере масштабирования,
 #       вместо явного 'RUB' нужно будет конвертировать сумму для каждого маркетплейса-получателя
-def get_converted_product_price(source: str, price: Decimal | int | float, markup: Decimal | int | float):
-    exchange_rate = ExchangeRate.objects.get(
-        source__code=source,
+def get_converted_product_price(product: Product):
+    provider_exchange_rate = ExchangeRate.objects.get(
+        source=product.marketplace.currency,
+        destination__code='RUB',
+    )
+    logistics_exchange_rate = ExchangeRate.objects.get(
+        source=product.marketplace.logistics.currency,
         destination__code='RUB',
     )
 
-    converted_price = price * exchange_rate.rate
+    converted_product_price = product.price * provider_exchange_rate.rate
+    converted_logistics_cost = product.marketplace.logistics.cost * logistics_exchange_rate.rate
+    logistics_cost_per_product_weight = converted_logistics_cost * product.weight
+    product_price_with_markup = converted_product_price + converted_product_price * Decimal(product.markup/100)
 
-    return converted_price + converted_price * Decimal(markup/100)
+    return product_price_with_markup + logistics_cost_per_product_weight
 
 
 def get_or_create_brand(brand_data: dict) -> tuple[Brand, bool]:
