@@ -62,7 +62,7 @@ def create_characteristic_matchings_by_category_matching_id(category_matching_id
 
     for char_mathing in created_char_mathing_list:
         recipient_char_value_ids = CharacteristicValue.objects.filter(
-            characteristic_id=char_mathing.recipient_characteristic_id,
+            characteristic_id=char_mathing.recipient_characteristic.characteristic_id,
         ).values_list(
             'id',
             flat=True,
