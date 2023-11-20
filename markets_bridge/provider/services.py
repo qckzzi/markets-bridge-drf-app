@@ -386,3 +386,12 @@ def get_or_create_brand(brand_data: dict) -> tuple[Brand, bool]:
     )
 
     return brand, is_new
+
+
+def get_product_urls_for_update() -> list[str]:
+    return Product.objects.filter(
+        is_updated=True,
+    ).values_list(
+        'url',
+        flat=True,
+    )
