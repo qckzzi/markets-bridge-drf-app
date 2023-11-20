@@ -160,7 +160,7 @@ class ProductAdmin(admin.ModelAdmin):
         'import_date', 
         'update_date', 
         'upload_date',
-        'is_export_allowed',
+        ('is_export_allowed', 'is_updated'),
         'category',
         'category_mathing_button',
     )

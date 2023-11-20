@@ -10,6 +10,9 @@ from parser_targets.services import (
     get_allowed_categories,
     get_allowed_products,
 )
+from provider.services import (
+    get_product_urls_for_update,
+)
 
 
 def send_target_products_to_parsing():
@@ -17,6 +20,13 @@ def send_target_products_to_parsing():
 
     for product in products:
         publish_to_parsing_queue(json.dumps({'url': product.url, 'type': EntityType.PRODUCT}))
+
+
+def send_existed_products_to_update():
+    product_urls = get_product_urls_for_update()
+
+    for url in product_urls:
+        publish_to_parsing_queue(json.dumps({'url': url, 'type': EntityType.PRODUCT}))
 
 
 def send_target_categories_to_parsing():

@@ -244,6 +244,10 @@ class Product(models.Model):
         on_delete=models.PROTECT,
         related_name='provider_products',
     )
+    is_updated = models.BooleanField(
+        verbose_name='Обновлять актуальные данные от поставщика',
+        default=True,
+    )
 
     @property
     def name_and_translate(self):
