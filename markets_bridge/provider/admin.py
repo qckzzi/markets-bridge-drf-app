@@ -186,7 +186,8 @@ class ProductAdmin(admin.ModelAdmin):
     marketplace.short_description = 'Поставщик'
 
     def preview_image(self, product):
-        return mark_safe(f'<img src = "{product.images.first().image.url}" width="100"/>')
+        if product.images.exists():
+            return mark_safe(f'<img src = "{product.images.first().image.url}" width="100"/>')
 
     preview_image.short_description = 'Изображение'
 
