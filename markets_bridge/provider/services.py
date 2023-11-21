@@ -316,14 +316,15 @@ def get_products_for_price_update():
 
     for product in products:
         product_price = get_converted_product_price(product)
+        discounted_price = get_converted_product_discounted_price(product)
         raw_product = dict(
             offer_id=str(product.id),
             price=str(product_price),
+            min_price=str(discounted_price),
         )
 
         if product.price != product.discounted_price:
-            old_price = get_converted_product_discounted_price(product)
-            raw_product['old_price'] = str(old_price)
+            raw_product['old_price'] = str(discounted_price)
         else:
             raw_product['old_price'] = '0'
 
