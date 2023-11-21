@@ -253,6 +253,14 @@ class Product(models.Model):
     def name_and_translate(self):
         return f'{self.name} ({self.translated_name or "Перевод отсутствует"})'
 
+    @property
+    def currency_code(self):
+        return self.marketplace.currency.code
+
+    @property
+    def logistics_currency_code(self):
+        return self.marketplace.logistics.currency.code
+
     def __str__(self):
         return self.name_and_translate
 
