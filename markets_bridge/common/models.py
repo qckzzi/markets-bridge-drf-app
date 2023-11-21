@@ -77,6 +77,10 @@ class Logistics(models.Model):
         related_name='logistics',
     )
 
+    @property
+    def currency_code(self):
+        return self.currency.code
+
     class Meta:
         verbose_name = 'Логистика'
         verbose_name_plural = 'Логистика'

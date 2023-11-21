@@ -1,8 +1,8 @@
 import logging
-
-from django.db.models import (
-    QuerySet,
+from decimal import (
+    Decimal,
 )
+
 from django.db.transaction import (
     atomic,
 )
@@ -133,3 +133,14 @@ def write_log(message: str):
         service_name='Markets-Bridge',
         entry=message,
     )
+
+
+def convert_value(src: str, dst: str, value: Decimal):
+    exchange_rate = ExchangeRate.objects.only(
+        'rate',
+    ).get(
+        source__code=src,
+        destination__code=dst,
+    ).rate
+
+    return value * exchange_rate

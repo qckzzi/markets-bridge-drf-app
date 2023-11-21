@@ -3,6 +3,9 @@ import logging
 from decimal import (
     Decimal,
 )
+from typing import (
+    Literal,
+)
 
 from django.db.transaction import (
     atomic,
@@ -14,10 +17,11 @@ from rest_framework.generics import (
 from common.models import (
     CategoryMatching,
     CharacteristicValueMatching,
-    ExchangeRate,
+    Logistics,
     SystemSettingConfig,
 )
 from common.services import (
+    convert_value,
     write_log,
 )
 from provider.models import (
@@ -199,11 +203,11 @@ def get_products_for_ozon(host: str) -> dict:
                     )
                 )
 
-        char_mathings_with_default_value = category_matching.characteristic_matchings.filter(
+        char_matchings_with_default_value = category_matching.characteristic_matchings.filter(
             recipient_value__isnull=False,
         )
 
-        for matching in char_mathings_with_default_value:
+        for matching in char_matchings_with_default_value:
             attributes.append(
                 dict(
                     complex_id=0,
@@ -287,7 +291,7 @@ def get_products_for_ozon(host: str) -> dict:
         )
 
         if product.price != product.discounted_price:
-            old_price = get_converted_product_price(product)
+            old_price = get_converted_product_discounted_price(product)
             raw_product['old_price'] = str(old_price)
 
         result.append(raw_product)
@@ -315,11 +319,10 @@ def get_products_for_price_update():
         raw_product = dict(
             offer_id=str(product.id),
             price=str(product_price),
-            min_price=str(product_price)
         )
 
         if product.price != product.discounted_price:
-            old_price = get_converted_product_price(product)
+            old_price = get_converted_product_discounted_price(product)
             raw_product['old_price'] = str(old_price)
         else:
             raw_product['old_price'] = '0'
@@ -355,20 +358,21 @@ def get_products_for_stock_update():
     return dict(stocks=result) if result else {}
 
 
-# TODO: Переделать функцию по мере масштабирования,
-#       вместо явного 'RUB' нужно будет конвертировать сумму для каждого маркетплейса-получателя
 def get_converted_product_price(product: Product):
-    provider_exchange_rate = ExchangeRate.objects.get(
-        source=product.marketplace.currency,
-        destination__code='RUB',
-    )
-    logistics_exchange_rate = ExchangeRate.objects.get(
-        source=product.marketplace.logistics.currency,
-        destination__code='RUB',
+    return _get_converted_product_abstract_price(product, 'price')
+
+
+def get_converted_product_discounted_price(product: Product):
+    return _get_converted_product_abstract_price(product, 'discounted_price')
+
+
+def _get_converted_product_abstract_price(product: Product, price_field_name: Literal['price', 'discounted_price']):
+    product_logistics = Logistics.objects.get(
+        marketplace__provider_products=product,
     )
 
-    converted_product_price = product.price * provider_exchange_rate.rate
-    converted_logistics_cost = product.marketplace.logistics.cost * logistics_exchange_rate.rate
+    converted_product_price = convert_value(product.currency_code, 'RUB', getattr(product, price_field_name))
+    converted_logistics_cost = convert_value(product_logistics.currency_code, 'RUB', product_logistics.cost)
     logistics_cost_per_product_weight = converted_logistics_cost * product.weight
     product_price_with_markup = converted_product_price + converted_product_price * Decimal(product.markup/100)
 
