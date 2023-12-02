@@ -18,7 +18,7 @@ from common.models import (
     ExchangeRate,
     Log,
     Marketplace,
-    SystemEnvironment,
+    SystemVariable,
 )
 from common.utils import (
     get_exchange_rate,
@@ -37,8 +37,8 @@ def get_recipient_category_id_by_category_mathing_id(category_mathing_id):
     ).recipient_category_id
 
 
-def get_system_environments():
-    return SystemEnvironment.objects.all()
+def get_system_variables():
+    return SystemVariable.objects.all()
 
 
 @atomic

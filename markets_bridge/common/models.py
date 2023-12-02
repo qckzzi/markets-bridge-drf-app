@@ -120,6 +120,7 @@ class ExchangeRate(models.Model):
 
 
 class SystemSettingConfig(models.Model):
+    # TODO: Перенести поле в модель PersonalArea и удалить модель SystemSettingConfig
     vat_rate = models.CharField(
         verbose_name='Ставка НДС',
         choices=VatRate.get_choices(),
@@ -265,12 +266,10 @@ class Log(models.Model):
         return f'{self.service_name} log (ID: {self.pk})'
 
 
-class SystemEnvironment(models.Model):
+class SystemVariable(models.Model):
     key = models.CharField(
         max_length=255,
         verbose_name='Ключ',
-        primary_key=True,
-        unique=True,
     )
     value = models.TextField(
         verbose_name='Значение',
@@ -282,3 +281,48 @@ class SystemEnvironment(models.Model):
 
     def __str__(self):
         return f'{self.key}: {self.value}'
+
+
+class PersonalArea(models.Model):
+    name = models.CharField(
+        max_length=255,
+        verbose_name='Наименование',
+        primary_key=True,
+        unique=True,
+    )
+    system_variables = models.ManyToManyField(
+        'common.SystemVariable',
+        related_name='personal_areas',
+        verbose_name='Переменные системы',
+        through='common.PersonalAreaVariable',
+    )
+
+    class Meta:
+        verbose_name = 'Личный кабинет'
+        verbose_name_plural = 'Личные кабинеты'
+
+    def __str__(self):
+        return self.name
+
+
+class PersonalAreaVariable(models.Model):
+    personal_area = models.ForeignKey(
+        'common.PersonalArea',
+        on_delete=models.CASCADE,
+    )
+    system_variable = models.ForeignKey(
+        'common.SystemVariable',
+        on_delete=models.CASCADE,
+    )
+
+    def delete(self, *args, **kwargs):
+        super().delete(*args, **kwargs)
+
+        self.system_variable.delete()
+
+    class Meta:
+        verbose_name = 'Переменная личного кабинета'
+        verbose_name_plural = 'Переменные личных кабинетов'
+
+    def __str__(self):
+        return f'{self.system_variable.key} ({self.personal_area.name})'

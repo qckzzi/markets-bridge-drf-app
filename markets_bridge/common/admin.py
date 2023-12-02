@@ -17,8 +17,10 @@ from common.models import (
     Log,
     Logistics,
     Marketplace,
-    SystemEnvironment,
+    PersonalArea,
+    PersonalAreaVariable,
     SystemSettingConfig,
+    SystemVariable,
 )
 from core.admin import (
     ReadOnlyModelAdmin,
@@ -203,8 +205,8 @@ class LogAdmin(admin.ModelAdmin):
         )
 
 
-@admin.register(SystemEnvironment)
-class SystemEnvironmentAdmin(admin.ModelAdmin):
+@admin.register(SystemVariable)
+class SystemVariableAdmin(admin.ModelAdmin):
     list_display = (
         'key',
         'value',
@@ -225,3 +227,13 @@ class LogisticsAdmin(admin.ModelAdmin):
         'cost',
         'currency',
     )
+
+
+class PersonalAreaVariableAdmin(admin.TabularInline):
+    model = PersonalAreaVariable
+    extra = 0
+
+
+@admin.register(PersonalArea)
+class PersonalAreaAdmin(admin.ModelAdmin):
+    inlines = (PersonalAreaVariableAdmin,)

@@ -9,14 +9,14 @@ from rest_framework.routers import (
 from common.views import (
     CharacteristicMatchingAPIViewSet,
     LogsAPIViewSet,
-    SystemEnvironmentsAPIViewSet,
+    SystemVariablesAPIViewSet,
 )
 
 
 router = DefaultRouter()
 router.register(
-    r'system_environments',
-    SystemEnvironmentsAPIViewSet,
+    r'system_variables',
+    SystemVariablesAPIViewSet,
 )
 router.register(
     r'logs',

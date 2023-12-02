@@ -19,11 +19,11 @@ from rest_framework_simplejwt.authentication import (
 
 from common.serializers import (
     LogSerializer,
-    SystemEnvironmentSerializer,
+    SystemVariableSerializer,
 )
 from common.services import (
     create_characteristic_matchings_by_category_matching_id,
-    get_system_environments,
+    get_system_variables,
 )
 from core.viewsets import (
     CreateViewSet,
@@ -31,9 +31,9 @@ from core.viewsets import (
 )
 
 
-class SystemEnvironmentsAPIViewSet(RetrieveViewSet):
-    queryset = get_system_environments()
-    serializer_class = SystemEnvironmentSerializer
+class SystemVariablesAPIViewSet(RetrieveViewSet):
+    queryset = get_system_variables()
+    serializer_class = SystemVariableSerializer
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 

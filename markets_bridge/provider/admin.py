@@ -85,11 +85,10 @@ class CharacteristicValueAdmin(admin.ModelAdmin):
 
 
 class ProductValueAdmin(admin.TabularInline):
-    fields = (
+    readonly_fields = (
         'value_characteristic',
         'value',
     )
-    readonly_fields = fields
     model = ProductValue
     extra = 0
 
@@ -157,6 +156,7 @@ class ProductAdmin(admin.ModelAdmin):
         'product_url',
         ('price', 'discounted_price', 'currency', 'markup'),
         ('stock_quantity', 'weight'),
+        'personal_areas',
         'import_date', 
         'update_date', 
         'upload_date',
@@ -166,6 +166,7 @@ class ProductAdmin(admin.ModelAdmin):
     )
     filter_horizontal = (
         'characteristic_values',
+        'personal_areas',
     )
     list_editable = (
         'is_export_allowed',

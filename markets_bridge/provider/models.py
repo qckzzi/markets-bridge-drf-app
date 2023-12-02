@@ -249,6 +249,11 @@ class Product(models.Model):
         verbose_name='Обновлять актуальные данные от поставщика',
         default=True,
     )
+    personal_areas = models.ManyToManyField(
+        'common.PersonalArea',
+        related_name='products',
+        verbose_name='Личные кабинеты',
+    )
 
     @property
     def name_and_translate(self):
