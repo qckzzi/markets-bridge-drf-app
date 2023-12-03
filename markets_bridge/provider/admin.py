@@ -1,5 +1,12 @@
+from django import (
+    forms,
+)
 from django.contrib import (
     admin,
+    messages,
+)
+from django.contrib.admin.helpers import (
+    ActionForm,
 )
 from django.utils.html import (
     format_html,
@@ -9,6 +16,9 @@ from rest_framework.reverse import (
     reverse,
 )
 
+from common.models import (
+    Warehouse,
+)
 from provider.models import (
     Brand,
     Category,
@@ -112,6 +122,14 @@ class ProductImageAdmin(admin.TabularInline):
     image_preview.allow_tags = True
 
 
+class ProductActionForm(ActionForm):
+    warehouse = forms.ModelChoiceField(
+        queryset=Warehouse.objects.all(),
+        required=False,
+        label='Склад',
+    )
+
+
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
     list_display = (
@@ -155,8 +173,7 @@ class ProductAdmin(admin.ModelAdmin):
         'brand',
         'product_url',
         ('price', 'discounted_price', 'currency', 'markup'),
-        ('stock_quantity', 'weight'),
-        'personal_areas',
+        ('warehouse', 'stock_quantity', 'weight'),
         'import_date', 
         'update_date', 
         'upload_date',
@@ -166,7 +183,6 @@ class ProductAdmin(admin.ModelAdmin):
     )
     filter_horizontal = (
         'characteristic_values',
-        'personal_areas',
     )
     list_editable = (
         'is_export_allowed',
@@ -174,7 +190,34 @@ class ProductAdmin(admin.ModelAdmin):
     list_filter = (
         'is_export_allowed',
     )
-    inlines = (ProductImageAdmin, ProductValueAdmin)
+    autocomplete_fields = (
+        'warehouse',
+    )
+    inlines = (
+        ProductImageAdmin,
+        ProductValueAdmin,
+    )
+    actions = (
+        'change_warehouse',
+    )
+    action_form = ProductActionForm
+    list_per_page = 25
+
+    def change_warehouse(self, request, queryset):
+        form = self.action_form(request.POST)
+        form.full_clean()
+        warehouse = form.cleaned_data['warehouse']
+
+        if not warehouse:
+            messages.error(request, 'Пожалуйста, укажите склад для обновления товаров.')
+            return
+
+        queryset.update(
+            warehouse=warehouse,
+        )
+        messages.success(request, f'Склад {warehouse.name} успешно установлен для товаров.')
+
+    change_warehouse.short_description = 'Изменить склад'
 
     def currency(self, product):
         return product.category.marketplace.currency.name

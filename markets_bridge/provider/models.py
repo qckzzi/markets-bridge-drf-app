@@ -249,10 +249,13 @@ class Product(models.Model):
         verbose_name='Обновлять актуальные данные от поставщика',
         default=True,
     )
-    personal_areas = models.ManyToManyField(
-        'common.PersonalArea',
+    warehouse = models.ForeignKey(
+        'common.Warehouse',
+        on_delete=models.SET_NULL,
         related_name='products',
-        verbose_name='Личные кабинеты',
+        verbose_name='Склад',
+        null=True,
+        blank=True,
     )
 
     @property

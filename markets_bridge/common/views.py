@@ -12,6 +12,7 @@ from rest_framework.response import (
 )
 from rest_framework.viewsets import (
     GenericViewSet,
+    ReadOnlyModelViewSet,
 )
 from rest_framework_simplejwt.authentication import (
     JWTAuthentication,
@@ -27,13 +28,13 @@ from common.services import (
 )
 from core.viewsets import (
     CreateViewSet,
-    RetrieveViewSet,
 )
 
 
-class SystemVariablesAPIViewSet(RetrieveViewSet):
+class SystemVariablesAPIViewSet(ReadOnlyModelViewSet):
     queryset = get_system_variables()
     serializer_class = SystemVariableSerializer
+    lookup_field = 'key'
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 

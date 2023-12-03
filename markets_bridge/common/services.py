@@ -18,6 +18,7 @@ from common.models import (
     ExchangeRate,
     Log,
     Marketplace,
+    PersonalArea,
     SystemVariable,
 )
 from common.utils import (
@@ -38,7 +39,9 @@ def get_recipient_category_id_by_category_mathing_id(category_mathing_id):
 
 
 def get_system_variables():
-    return SystemVariable.objects.all()
+    return SystemVariable.objects.filter(
+        system_setting_configs__is_selected=True,
+    )
 
 
 @atomic
@@ -144,3 +147,7 @@ def convert_value(src: str, dst: str, value: Decimal):
     ).rate
 
     return value * exchange_rate
+
+
+def get_personal_areas():
+    return PersonalArea.objects.all()

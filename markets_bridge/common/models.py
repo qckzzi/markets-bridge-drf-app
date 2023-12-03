@@ -48,8 +48,14 @@ class Marketplace(models.Model):
 
 
 class Currency(models.Model):
-    name = models.CharField(verbose_name='Наименование валюты', max_length=100)
-    code = models.CharField(verbose_name='Код валюты', max_length=3)
+    name = models.CharField(
+        verbose_name='Наименование валюты',
+        max_length=100,
+    )
+    code = models.CharField(
+        verbose_name='Код валюты',
+        max_length=3,
+    )
 
     def __str__(self):
         return f'{self.name} ({self.code})'
@@ -129,6 +135,11 @@ class SystemSettingConfig(models.Model):
     is_selected = models.BooleanField(
         verbose_name='Активная конфигурация',
         default=False,
+    )
+    system_variables = models.ManyToManyField(
+        'common.SystemVariable',
+        related_name='system_setting_configs',
+        verbose_name='Системные переменные',
     )
 
     def save(self, *args, **kwargs):
@@ -290,11 +301,11 @@ class PersonalArea(models.Model):
         primary_key=True,
         unique=True,
     )
-    system_variables = models.ManyToManyField(
-        'common.SystemVariable',
+    marketplace = models.ForeignKey(
+        'common.Marketplace',
+        on_delete=models.PROTECT,
         related_name='personal_areas',
-        verbose_name='Переменные системы',
-        through='common.PersonalAreaVariable',
+        verbose_name='Маркетплейс',
     )
 
     class Meta:
@@ -309,10 +320,12 @@ class PersonalAreaVariable(models.Model):
     personal_area = models.ForeignKey(
         'common.PersonalArea',
         on_delete=models.CASCADE,
+        related_name='related_variables',
     )
-    system_variable = models.ForeignKey(
+    system_variable = models.OneToOneField(
         'common.SystemVariable',
         on_delete=models.CASCADE,
+        related_name='related_personal_areas',
     )
 
     def delete(self, *args, **kwargs):
@@ -326,3 +339,24 @@ class PersonalAreaVariable(models.Model):
 
     def __str__(self):
         return f'{self.system_variable.key} ({self.personal_area.name})'
+
+
+class Warehouse(models.Model):
+    name = models.CharField(
+        max_length=255,
+        verbose_name='Наименование',
+    )
+    external_id = models.PositiveIntegerField(
+        verbose_name='Внешний идентификатор',
+    )
+    personal_area = models.ForeignKey(
+        'common.PersonalArea',
+        on_delete=models.CASCADE,
+    )
+
+    class Meta:
+        verbose_name = 'Склад'
+        verbose_name_plural = 'Склады'
+
+    def __str__(self):
+        return f'{self.name} ({self.personal_area.name})'

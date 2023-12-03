@@ -21,6 +21,7 @@ from common.models import (
     PersonalAreaVariable,
     SystemSettingConfig,
     SystemVariable,
+    Warehouse,
 )
 from core.admin import (
     ReadOnlyModelAdmin,
@@ -62,6 +63,9 @@ class SystemSettingConfigAdmin(admin.ModelAdmin):
     )
     list_editable = (
         'is_selected',
+    )
+    filter_horizontal = (
+        'system_variables',
     )
 
 
@@ -234,6 +238,26 @@ class PersonalAreaVariableAdmin(admin.TabularInline):
     extra = 0
 
 
+class WarehouseInlineAdmin(admin.TabularInline):
+    model = Warehouse
+    extra = 0
+    fields = (
+        'name',
+        'external_id',
+    )
+
+
 @admin.register(PersonalArea)
 class PersonalAreaAdmin(admin.ModelAdmin):
-    inlines = (PersonalAreaVariableAdmin,)
+    inlines = (
+        PersonalAreaVariableAdmin,
+        WarehouseInlineAdmin,
+    )
+
+
+@admin.register(Warehouse)
+class WarehouseAdmin(admin.ModelAdmin):
+    search_fields = (
+        'name',
+        'personal_area__name',
+    )
