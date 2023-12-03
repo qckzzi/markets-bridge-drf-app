@@ -346,7 +346,7 @@ class Warehouse(models.Model):
         max_length=255,
         verbose_name='Наименование',
     )
-    external_id = models.PositiveIntegerField(
+    external_id = models.PositiveBigIntegerField(
         verbose_name='Внешний идентификатор',
     )
     personal_area = models.ForeignKey(
