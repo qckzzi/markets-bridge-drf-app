@@ -4,13 +4,13 @@ from rest_framework.serializers import (
 
 from common.models import (
     Log,
-    SystemEnvironment,
+    SystemVariable,
 )
 
 
-class SystemEnvironmentSerializer(ModelSerializer):
+class SystemVariableSerializer(ModelSerializer):
     class Meta:
-        model = SystemEnvironment
+        model = SystemVariable
         fields = '__all__'
 
 

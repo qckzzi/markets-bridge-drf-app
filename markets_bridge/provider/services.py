@@ -18,7 +18,12 @@ from common.models import (
     CategoryMatching,
     CharacteristicValueMatching,
     Logistics,
+    PersonalArea,
     SystemSettingConfig,
+    SystemVariable,
+)
+from common.serializers import (
+    SystemVariableSerializer,
 )
 from common.services import (
     convert_value,
@@ -162,11 +167,13 @@ def create_category_matching(category_id) -> CategoryMatching:
 # TODO: Логика выгрузки товара должна быть переделана, DRF не должен формировать данные под формат озона
 #       Писалось на скорую руку...
 @atomic
-def get_products_for_ozon(host: str) -> dict:
+def get_products_for_ozon(host: str, personal_area: PersonalArea) -> dict:
     result = []
+    raw_personal_area_variables = []
 
     products = Product.objects.filter(
         is_export_allowed=True,
+        warehouse__personal_area=personal_area,
     ).select_related(
         'brand',
         'marketplace__currency',
@@ -233,6 +240,8 @@ def get_products_for_ozon(host: str) -> dict:
             brand_external_id = RecipientCharacteristicValue.objects.only(
                 'external_id',
             ).get(
+                # TODO: Изменить lookup на iexact
+                #   Issue #22
                 value__icontains=product.brand.name,
                 characteristic__external_id=85,
                 marketplace_id=2,
@@ -278,7 +287,7 @@ def get_products_for_ozon(host: str) -> dict:
             is_selected=True,
         ).vat_rate
 
-        product_price = get_converted_product_price(product)
+        product_price = get_converted_product_discounted_price(product)
         
         raw_product = dict(
             attributes=attributes,
@@ -291,24 +300,35 @@ def get_products_for_ozon(host: str) -> dict:
         )
 
         if product.price != product.discounted_price:
-            old_price = get_converted_product_discounted_price(product)
+            old_price = get_converted_product_price(product)
             raw_product['old_price'] = str(old_price)
 
         result.append(raw_product)
+        personal_area_variables = SystemVariable.objects.filter(
+            related_personal_areas__personal_area=personal_area,
+        ).values(
+            'key',
+            'value',
+        )
+
+        system_variable_serializer = SystemVariableSerializer(personal_area_variables, many=True)
+        raw_personal_area_variables = system_variable_serializer.data
 
         product.upload_date = datetime.datetime.now()
         product.save()
 
-    return dict(items=result) if result else {}
+    return dict(items=result, personal_area=raw_personal_area_variables) if result else {}
 
 
 @atomic
-def get_products_for_price_update():
+def get_products_for_price_update(personal_area: PersonalArea):
     result = []
+    raw_personal_area_variables = []
 
     products = Product.objects.filter(
         is_export_allowed=True,
         upload_date__isnull=False,
+        warehouse__personal_area=personal_area,
     ).select_related(
         'marketplace__currency',
         'marketplace__logistics',
@@ -319,44 +339,68 @@ def get_products_for_price_update():
         discounted_price = get_converted_product_discounted_price(product)
         raw_product = dict(
             offer_id=str(product.id),
-            price=str(product_price),
+            price=str(discounted_price),
             min_price=str(discounted_price),
         )
 
         if product.price != product.discounted_price:
-            raw_product['old_price'] = str(discounted_price)
+            raw_product['old_price'] = str(product_price)
         else:
             raw_product['old_price'] = '0'
 
         result.append(raw_product)
+        personal_area_variables = SystemVariable.objects.filter(
+            related_personal_areas__personal_area=personal_area,
+        ).values(
+            'key',
+            'value',
+        )
+
+        system_variable_serializer = SystemVariableSerializer(personal_area_variables, many=True)
+        raw_personal_area_variables = system_variable_serializer.data
 
         product.upload_date = datetime.datetime.now()
         product.save()
 
-    return dict(prices=result) if result else {}
+    return dict(prices=result, personal_area=raw_personal_area_variables) if result else {}
 
 
 @atomic
-def get_products_for_stock_update():
+def get_products_for_stock_update(personal_area: PersonalArea):
     result = []
+    raw_personal_area_variables = []
 
     products = Product.objects.filter(
         is_export_allowed=True,
         upload_date__isnull=False,
+        warehouse__isnull=False,
+        warehouse__personal_area=personal_area,
+    ).select_related(
+        'warehouse',
     )
 
     for product in products:
         raw_product = dict(
             offer_id=str(product.id),
             stock=product.stock_quantity,
+            warehouse_id=product.warehouse.external_id,
         )
 
         result.append(raw_product)
+        personal_area_variables = SystemVariable.objects.filter(
+            related_personal_areas__personal_area=personal_area,
+        ).values(
+            'key',
+            'value',
+        )
 
+        system_variable_serializer = SystemVariableSerializer(personal_area_variables, many=True)
+
+        raw_personal_area_variables = system_variable_serializer.data
         product.upload_date = datetime.datetime.now()
         product.save()
 
-    return dict(stocks=result) if result else {}
+    return dict(stocks=result, personal_area=raw_personal_area_variables) if result else {}
 
 
 def get_converted_product_price(product: Product):

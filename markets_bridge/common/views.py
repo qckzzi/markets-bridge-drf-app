@@ -12,6 +12,7 @@ from rest_framework.response import (
 )
 from rest_framework.viewsets import (
     GenericViewSet,
+    ReadOnlyModelViewSet,
 )
 from rest_framework_simplejwt.authentication import (
     JWTAuthentication,
@@ -19,21 +20,21 @@ from rest_framework_simplejwt.authentication import (
 
 from common.serializers import (
     LogSerializer,
-    SystemEnvironmentSerializer,
+    SystemVariableSerializer,
 )
 from common.services import (
     create_characteristic_matchings_by_category_matching_id,
-    get_system_environments,
+    get_system_variables,
 )
 from core.viewsets import (
     CreateViewSet,
-    RetrieveViewSet,
 )
 
 
-class SystemEnvironmentsAPIViewSet(RetrieveViewSet):
-    queryset = get_system_environments()
-    serializer_class = SystemEnvironmentSerializer
+class SystemVariablesAPIViewSet(ReadOnlyModelViewSet):
+    queryset = get_system_variables()
+    serializer_class = SystemVariableSerializer
+    lookup_field = 'key'
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 

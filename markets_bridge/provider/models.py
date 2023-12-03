@@ -249,6 +249,14 @@ class Product(models.Model):
         verbose_name='Обновлять актуальные данные от поставщика',
         default=True,
     )
+    warehouse = models.ForeignKey(
+        'common.Warehouse',
+        on_delete=models.SET_NULL,
+        related_name='products',
+        verbose_name='Склад',
+        null=True,
+        blank=True,
+    )
 
     @property
     def name_and_translate(self):

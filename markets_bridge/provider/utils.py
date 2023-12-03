@@ -1,6 +1,9 @@
 import json
 import os
 
+from common.services import (
+    get_personal_areas,
+)
 from core.enums import (
     EntityType,
 )
@@ -43,27 +46,36 @@ def publish_to_translation_queue(message: str):
 
 
 def load_products():
-    products = get_products_for_ozon(os.getenv('HOST'))
+    personal_areas = get_personal_areas()
 
-    if products:
-        message = {'products': products, 'method': ProductActionType.LOAD_PRODUCTS}
-        publish_to_outloading_queue(json.dumps(message))
+    for area in personal_areas:
+        products = get_products_for_ozon(os.getenv('HOST'), area)
+
+        if products:
+            message = {'products': products, 'method': ProductActionType.LOAD_PRODUCTS}
+            publish_to_outloading_queue(json.dumps(message))
 
 
 def update_product_prices():
-    products = get_products_for_price_update()
+    personal_areas = get_personal_areas()
 
-    if products:
-        message = {'products': products, 'method': ProductActionType.UPDATE_PRODUCT_PRICES}
-        publish_to_outloading_queue(json.dumps(message))
+    for area in personal_areas:
+        products = get_products_for_price_update(area)
+
+        if products:
+            message = {'products': products, 'method': ProductActionType.UPDATE_PRODUCT_PRICES}
+            publish_to_outloading_queue(json.dumps(message))
 
 
 def update_product_stocks():
-    products = get_products_for_stock_update()
+    personal_areas = get_personal_areas()
 
-    if products:
-        message = {'products': products, 'method': ProductActionType.UPDATE_PRODUCT_STOCKS}
-        publish_to_outloading_queue(json.dumps(message))
+    for area in personal_areas:
+        products = get_products_for_stock_update(area)
+
+        if products:
+            message = {'products': products, 'method': ProductActionType.UPDATE_PRODUCT_STOCKS}
+            publish_to_outloading_queue(json.dumps(message))
 
 
 def publish_to_outloading_queue(message: str):
