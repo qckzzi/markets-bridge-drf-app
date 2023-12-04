@@ -45,4 +45,5 @@ def category_matching_saved(sender, instance, created, **kwargs):
             category_matching_id=instance.id,
         ).delete()
 
-        update_recipient_attributes(instance.recipient_category.external_id, instance.id)
+        if instance.recipient_category:
+            update_recipient_attributes(instance.recipient_category.external_id, instance.id)

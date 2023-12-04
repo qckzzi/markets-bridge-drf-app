@@ -7,6 +7,9 @@ from typing import (
     Literal,
 )
 
+from django.db.models import (
+    QuerySet,
+)
 from django.db.transaction import (
     atomic,
 )
@@ -443,4 +446,10 @@ def get_product_urls_for_update() -> list[str]:
     ).values_list(
         'url',
         flat=True,
+    )
+
+
+def update_product_export_allowance(products: QuerySet[Product], is_allowed: bool):
+    products.update(
+        is_export_allowed=is_allowed,
     )
