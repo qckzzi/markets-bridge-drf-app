@@ -5,12 +5,21 @@ from django.contrib import (
     admin,
     messages,
 )
+from django.contrib.admin import (
+    SimpleListFilter,
+)
 from django.contrib.admin.helpers import (
     ActionForm,
 )
 from django.utils.html import (
     format_html,
     mark_safe,
+)
+from django.utils.translation import (
+    gettext_lazy as _,
+)
+from django_admin_listfilter_dropdown.filters import (
+    RelatedOnlyDropdownFilter,
 )
 from rest_framework.reverse import (
     reverse,
@@ -27,6 +36,9 @@ from provider.models import (
     Product,
     ProductImage,
     ProductValue,
+)
+from provider.services import (
+    update_product_export_allowance,
 )
 
 
@@ -128,6 +140,33 @@ class ProductActionForm(ActionForm):
         required=False,
         label='Склад',
     )
+    markup = forms.IntegerField(
+        min_value=0,
+        label='Коэффициент наценки, %',
+        required=False,
+    )
+
+
+class IsMatchedCategoryFilter(SimpleListFilter):
+    title = _('Сопоставлена ли категория?')
+    parameter_name = 'is_matched_category'
+
+    def lookups(self, request, model_admin):
+        return (
+            (True, _('Да')),
+            (False, _('Нет')),
+        )
+
+    def queryset(self, request, queryset):
+        value = self.value()
+
+        if value is not None:
+            is_not_matched = value == 'False'
+            queryset = queryset.filter(
+                category__matching__recipient_category__isnull=is_not_matched,
+            )
+
+        return queryset
 
 
 @admin.register(Product)
@@ -189,6 +228,8 @@ class ProductAdmin(admin.ModelAdmin):
     )
     list_filter = (
         'is_export_allowed',
+        IsMatchedCategoryFilter,
+        ('category', RelatedOnlyDropdownFilter),
     )
     autocomplete_fields = (
         'warehouse',
@@ -199,6 +240,9 @@ class ProductAdmin(admin.ModelAdmin):
     )
     actions = (
         'change_warehouse',
+        'allow_export',
+        'disallow_export',
+        'update_markup',
     )
     action_form = ProductActionForm
     list_per_page = 25
@@ -218,6 +262,34 @@ class ProductAdmin(admin.ModelAdmin):
         messages.success(request, f'Склад {warehouse.name} успешно установлен для товаров.')
 
     change_warehouse.short_description = 'Изменить склад'
+
+    def allow_export(self, request, queryset):
+        update_product_export_allowance(queryset, is_allowed=True)
+        messages.success(request, 'Товары успешно обновлены!')
+
+    allow_export.short_description = 'Разрешить экспорт'
+
+    def disallow_export(self, request, queryset):
+        update_product_export_allowance(queryset, is_allowed=False)
+        messages.success(request, 'Товары успешно обновлены!')
+
+    disallow_export.short_description = 'Запретить экспорт'
+
+    def update_markup(self, request, queryset):
+        form = self.action_form(request.POST)
+        form.full_clean()
+        markup = form.cleaned_data['markup']
+
+        if not markup:
+            messages.error(request, 'Пожалуйста, укажите наценку для обновления товаров.')
+            return
+
+        queryset.update(
+            markup=markup,
+        )
+        messages.success(request, f'Наценка в {markup}% успешно обновлена у товаров!')
+
+    update_markup.short_description = 'Изменить наценку'
 
     def currency(self, product):
         return product.category.marketplace.currency.name

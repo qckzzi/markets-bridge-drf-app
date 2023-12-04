@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_celery_beat',
     'rest_framework_simplejwt',
+    'django_admin_listfilter_dropdown',
     'parser_targets.apps.ParserTargetsConfig',
     'provider.apps.ProviderConfig',
     'recipient.apps.RecipientConfig',
