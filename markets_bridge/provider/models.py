@@ -15,10 +15,12 @@ class Category(models.Model):
     external_id = models.PositiveIntegerField(
         verbose_name='Внешний id в системе маркетплейса',
         db_index=True,
+        default=0,
     )
     name = models.CharField(
         verbose_name='Наименование',
         max_length=100,
+        db_index=True,
     )
     translated_name = models.CharField(
         verbose_name='Переведённое наименование',
@@ -49,10 +51,12 @@ class Characteristic(models.Model):
     external_id = models.PositiveIntegerField(
         verbose_name='Внешний id в системе маркетплейса',
         db_index=True,
+        default=0,
     )
     name = models.CharField(
         verbose_name='Наименование',
         max_length=255,
+        db_index=True,
     )
     translated_name = models.CharField(
         verbose_name='Переведённое наименование',
@@ -88,6 +92,7 @@ class CharacteristicValue(models.Model):
     external_id = models.PositiveIntegerField(
         verbose_name='Внешний id в системе поставщика',
         db_index=True,
+        default=0,
     )
     value = models.CharField(
         verbose_name='Значение',
@@ -128,10 +133,12 @@ class Brand(models.Model):
     external_id = models.PositiveIntegerField(
         verbose_name='Внешний id в системе поставщика',
         db_index=True,
+        default=0,
     )
     name = models.CharField(
         verbose_name='Наименование',
         max_length=255,
+        db_index=True,
     )
     marketplace = models.ForeignKey(
         'common.Marketplace',
@@ -204,6 +211,24 @@ class Product(models.Model):
     )
     weight = models.DecimalField(
         verbose_name='Вес товара, кг',
+        decimal_places=3,
+        max_digits=6,
+        default=Decimal('0.000'),
+    )
+    width = models.DecimalField(
+        verbose_name='Ширина, см',
+        decimal_places=3,
+        max_digits=6,
+        default=Decimal('0.000'),
+    )
+    height = models.DecimalField(
+        verbose_name='Высота, см',
+        decimal_places=3,
+        max_digits=6,
+        default=Decimal('0.000'),
+    )
+    depth = models.DecimalField(
+        verbose_name='Глубина, см',
         decimal_places=3,
         max_digits=6,
         default=Decimal('0.000'),

@@ -45,30 +45,53 @@ from recipient.models import (
 )
 
 
+# TODO: Декомпозировать
 @atomic
 def create_or_update_product(product_data: dict) -> tuple[Product, bool]:
     """Создает товар, либо обновляет его."""
 
     marketplace_id = product_data.get('marketplace_id')
 
-    category_external_id = product_data.pop('category_external_id')
+    category_getting_kwargs = dict(
+        marketplace_id=marketplace_id,
+    )
+
+    if product_data.get('category_external_id'):
+        category_external_id = product_data.pop('category_external_id')
+        category_getting_kwargs['external_id'] = category_external_id
+    elif product_data.get('category_name'):
+        category_name = product_data.pop('category_name')
+        category_getting_kwargs['name'] = category_name
+
     category = get_object_or_404(
         Category,
-        external_id=category_external_id,
-        marketplace_id=marketplace_id,
+        **category_getting_kwargs,
     )
     product_data['category_id'] = category.id
 
-    brand_external_id = product_data.pop('brand_external_id')
+    brand_getting_kwargs = dict(
+        marketplace_id=marketplace_id,
+    )
+
+    if product_data.get('brand_external_id'):
+        brand_external_id = product_data.pop('brand_external_id')
+        brand_getting_kwargs['external_id'] = brand_external_id
+    elif product_data.get('brand_name'):
+        brand_name = product_data.pop('brand_name')
+        brand_getting_kwargs['name'] = brand_name
+
     brand = get_object_or_404(
         Brand,
-        external_id=brand_external_id,
-        marketplace_id=marketplace_id,
+        **brand_getting_kwargs,
     )
     product_data['brand_id'] = brand.id
 
     external_id = product_data.get('external_id')
-    value_external_ids = product_data.pop('characteristic_value_external_ids')
+
+    value_external_ids = []
+
+    if product_data.get('characteristic_value_external_ids'):
+        value_external_ids = product_data.pop('characteristic_value_external_ids')
 
     product, is_new = Product.objects.get_or_create(
         external_id=external_id,
@@ -76,7 +99,12 @@ def create_or_update_product(product_data: dict) -> tuple[Product, bool]:
         defaults=product_data,
     )
 
-    if is_new:
+    if not is_new:
+        product.price = product_data['price']
+        product.discounted_price = product_data['discounted_price']
+        product.stock_quantity = product_data['stock_quantity']
+        product.save()
+    elif value_external_ids:
         characteristic_values = CharacteristicValue.objects.filter(
             external_id__in=value_external_ids,
             marketplace_id=marketplace_id,
@@ -86,11 +114,6 @@ def create_or_update_product(product_data: dict) -> tuple[Product, bool]:
             ProductValue(product=product, value_id=value_id)
             for value_id in characteristic_values.values_list('id', flat=True)
         )
-    else:
-        product.price = product_data['price']
-        product.discounted_price = product_data['discounted_price']
-        product.stock_quantity = product_data['stock_quantity']
-        product.save()
 
     return product, is_new
 
@@ -99,13 +122,20 @@ def get_or_create_category(category_data: dict) -> tuple[Category, bool]:
     """Создает категорию."""
 
     external_id = category_data.get('external_id')
+    name = category_data.get('name')
     marketplace_id = category_data.get('marketplace_id')
 
-    category, is_new = Category.objects.get_or_create(
-        external_id=external_id,
+    get_or_create_kwargs = dict(
         marketplace_id=marketplace_id,
         defaults=category_data,
     )
+
+    if external_id:
+        get_or_create_kwargs['external_id'] = external_id
+    else:
+        get_or_create_kwargs['name'] = name
+
+    category, is_new = Category.objects.get_or_create(**get_or_create_kwargs)
 
     return category, is_new
 
@@ -429,23 +459,31 @@ def _get_converted_product_abstract_price(product: Product, price_field_name: Li
 
 def get_or_create_brand(brand_data: dict) -> tuple[Brand, bool]:
     external_id = brand_data.get('external_id')
+    name = brand_data.get('name')
     marketplace_id = brand_data.get('marketplace_id')
 
-    brand, is_new = Brand.objects.get_or_create(
-        external_id=external_id,
+    get_or_create_kwargs = dict(
         marketplace_id=marketplace_id,
         defaults=brand_data,
     )
 
+    if external_id:
+        get_or_create_kwargs['external_id'] = external_id
+    else:
+        get_or_create_kwargs['name'] = name
+
+    brand, is_new = Brand.objects.get_or_create(**get_or_create_kwargs)
+
     return brand, is_new
 
 
-def get_product_urls_for_update() -> list[str]:
-    return Product.objects.filter(
+def get_provider_products() -> QuerySet[Product]:
+    return Product.objects.all()
+
+
+def get_products_to_update() -> QuerySet[Product]:
+    return get_provider_products().filter(
         is_updated=True,
-    ).values_list(
-        'url',
-        flat=True,
     )
 
 
