@@ -217,21 +217,21 @@ class Product(models.Model):
     )
     width = models.DecimalField(
         verbose_name='Ширина, см',
-        decimal_places=3,
+        decimal_places=1,
         max_digits=6,
-        default=Decimal('0.000'),
+        default=Decimal('0.0'),
     )
     height = models.DecimalField(
         verbose_name='Высота, см',
-        decimal_places=3,
+        decimal_places=1,
         max_digits=6,
-        default=Decimal('0.000'),
+        default=Decimal('0.0'),
     )
     depth = models.DecimalField(
         verbose_name='Глубина, см',
-        decimal_places=3,
+        decimal_places=1,
         max_digits=6,
-        default=Decimal('0.000'),
+        default=Decimal('0.0'),
     )
     import_date = models.DateTimeField(
         verbose_name='Дата добавления',

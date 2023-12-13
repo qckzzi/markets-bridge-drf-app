@@ -330,6 +330,12 @@ def get_products_for_ozon(host: str, personal_area: PersonalArea) -> dict:
             offer_id=str(product.id),
             price=str(product_price),
             vat=vat,
+            dimension_unit='mm',
+            height=product.height*10,
+            width=product.width*10,
+            depth=product.depth*10,
+            weight=product.weight*1000,
+            weight_unit='g',
         )
 
         if product.price != product.discounted_price:
