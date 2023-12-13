@@ -273,9 +273,7 @@ def get_products_for_ozon(host: str, personal_area: PersonalArea) -> dict:
             brand_external_id = RecipientCharacteristicValue.objects.only(
                 'external_id',
             ).get(
-                # TODO: Изменить lookup на iexact
-                #   Issue #22
-                value__icontains=product.brand.name,
+                value__iexact=product.brand.name,
                 characteristic__external_id=85,
                 marketplace_id=2,
             ).external_id
