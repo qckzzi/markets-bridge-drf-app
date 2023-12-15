@@ -329,10 +329,10 @@ def get_products_for_ozon(host: str, personal_area: PersonalArea) -> dict:
             price=str(product_price),
             vat=vat,
             dimension_unit='mm',
-            height=product.height*10,
-            width=product.width*10,
-            depth=product.depth*10,
-            weight=product.weight*1000,
+            height=int(product.height*10),
+            width=int(product.width*10),
+            depth=int(product.depth*10),
+            weight=int(product.weight*1000),
             weight_unit='g',
         )
 
