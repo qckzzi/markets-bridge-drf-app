@@ -16,6 +16,10 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 
+from markets_bridge.swagger import (
+    urlpatterns as swagger_urlpatterns,
+)
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -28,4 +32,4 @@ urlpatterns = [
 ]
 
 urlpatterns.extend(static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT))
-
+urlpatterns.extend(swagger_urlpatterns)

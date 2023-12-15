@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django_celery_beat',
     'rest_framework_simplejwt',
     'django_admin_listfilter_dropdown',
+    'drf_yasg',
     'parser_targets.apps.ParserTargetsConfig',
     'provider.apps.ProviderConfig',
     'recipient.apps.RecipientConfig',
@@ -138,3 +139,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
+
+DEVELOPER_CONTACT_NAME = os.getenv('DEVELOPER_CONTACT_NAME')
+DEVELOPER_CONTACT_URL = os.getenv('DEVELOPER_CONTACT_URL')

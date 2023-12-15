@@ -29,18 +29,21 @@ class CategorySerializer(ModelSerializer):
     class Meta:
         model = Category
         fields = ALL_FIELDS
+        ref_name = 'ProviderCategory'
 
 
 class CharacteristicSerializer(ModelSerializer):
     class Meta:
         model = Characteristic
         fields = ALL_FIELDS
+        ref_name = 'ProviderCharacteristic'
 
 
 class CharacteristicValueSerializer(ModelSerializer):
     class Meta:
         model = CharacteristicValue
         fields = ALL_FIELDS
+        ref_name = 'ProviderCharacteristicValue'
 
 
 class BrandSerializer(ModelSerializer):

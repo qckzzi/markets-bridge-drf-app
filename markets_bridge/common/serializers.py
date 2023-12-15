@@ -1,5 +1,10 @@
+from rest_framework import (
+    fields,
+)
 from rest_framework.serializers import (
+    ALL_FIELDS,
     ModelSerializer,
+    Serializer,
 )
 
 from common.models import (
@@ -11,10 +16,17 @@ from common.models import (
 class SystemVariableSerializer(ModelSerializer):
     class Meta:
         model = SystemVariable
-        fields = '__all__'
+        fields = ALL_FIELDS
 
 
 class LogSerializer(ModelSerializer):
     class Meta:
         model = Log
-        fields = '__all__'
+        fields = ALL_FIELDS
+
+
+class CharacteristicMatchingSerializer(Serializer):
+    category_matching_id = fields.IntegerField(
+        required=True,
+        label='Идентификатор сопоставления категории',
+    )
