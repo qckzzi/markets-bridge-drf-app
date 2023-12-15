@@ -172,10 +172,9 @@ class IsMatchedCategoryFilter(SimpleListFilter):
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
     list_display = (
-        'id',
+        'vendor_code',
         'preview_image',
         'brand',
-        'product_code',
         'name',
         'translated_name',
         'discounted_price',
@@ -185,7 +184,7 @@ class ProductAdmin(admin.ModelAdmin):
         'marketplace',
     )
     list_display_links = (
-        'id',
+        'vendor_code',
         'preview_image',
     )
     search_fields = (
@@ -195,6 +194,7 @@ class ProductAdmin(admin.ModelAdmin):
         'category__name',
     )
     readonly_fields = (
+        'vendor_code',
         'brand',
         'currency',
         'import_date',
@@ -202,15 +202,14 @@ class ProductAdmin(admin.ModelAdmin):
         'upload_date',
         'external_id',
         'characteristic_values',
-        'product_url',
         'category',
         'category_mathing_button',
     )
     fields = (
-        'external_id',
+        ('vendor_code', 'external_id'),
         ('product_code', 'name', 'translated_name'),
         'brand',
-        'product_url',
+        'url',
         ('price', 'discounted_price', 'currency', 'markup'),
         ('warehouse', 'stock_quantity'),
         ('width', 'height', 'depth', 'weight'),
@@ -231,6 +230,7 @@ class ProductAdmin(admin.ModelAdmin):
         'is_export_allowed',
         IsMatchedCategoryFilter,
         ('category', RelatedOnlyDropdownFilter),
+        ('marketplace', RelatedOnlyDropdownFilter),
     )
     autocomplete_fields = (
         'warehouse',
@@ -312,14 +312,19 @@ class ProductAdmin(admin.ModelAdmin):
         category_id = product.category_id
         url = reverse('admin:common_categorymatching_changelist') + f'?provider_category_id={category_id}'
 
-        return format_html(f'<a href="{url}" class="button" target="_blank">Сопоставить категорию</a>')
+        if recipient_category := product.category.matching.recipient_category:
+            result = format_html(f'Категория товара сопоставлена с категорией получателя "{recipient_category.name}".<br><br><a href="{url}" class="button" target="_blank">Посмотреть сопоставление</a>')
+        else:
+            result = format_html(f'<a href="{url}" class="button" target="_blank">Сопоставить категорию</a>')
+
+        return result
 
     category_mathing_button.short_description = ''
 
-    def product_url(self, product):
-        return format_html(f'<a href="{product.url}" target="_blank">{product.url}</a>')
+    def vendor_code(self, product):
+        return product.vendor_code
 
-    product_url.short_description = 'URL товара'
+    vendor_code.short_description = 'Артикул'
 
 
 @admin.register(Brand)
