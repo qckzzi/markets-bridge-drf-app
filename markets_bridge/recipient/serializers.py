@@ -1,10 +1,6 @@
-from rest_framework.fields import (
-    IntegerField,
-)
 from rest_framework.serializers import (
     ALL_FIELDS,
     ModelSerializer,
-    Serializer,
 )
 
 from recipient.models import (
@@ -18,19 +14,18 @@ class CategorySerializer(ModelSerializer):
     class Meta:
         model = Category
         fields = ALL_FIELDS
-
-
-class RelevantCategorySerializer(Serializer):
-    external_id = IntegerField()
+        ref_name = 'RecipientCategory'
 
 
 class CharacteristicSerializer(ModelSerializer):
     class Meta:
         model = Characteristic
         fields = ALL_FIELDS
+        ref_name = 'RecipientCharacteristic'
 
 
 class CharacteristicValueSerializer(ModelSerializer):
     class Meta:
         model = CharacteristicValue
         fields = ALL_FIELDS
+        ref_name = 'RecipientCharacteristicValue'

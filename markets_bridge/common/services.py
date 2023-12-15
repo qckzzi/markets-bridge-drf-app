@@ -151,3 +151,7 @@ def convert_value(src: str, dst: str, value: Decimal):
 
 def get_personal_areas():
     return PersonalArea.objects.all()
+
+
+def get_logs():
+    return Log.objects.all()
