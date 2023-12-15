@@ -10,3 +10,4 @@ django-celery-beat==2.5.0
 djangorestframework-simplejwt==5.3.0
 beautifulsoup4==4.12.2
 django-admin-list-filter-dropdown==1.0.3
+drf-yasg==1.21.7

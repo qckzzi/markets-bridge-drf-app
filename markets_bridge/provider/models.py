@@ -295,6 +295,10 @@ class Product(models.Model):
     def logistics_currency_code(self):
         return self.marketplace.logistics.currency.code
 
+    @property
+    def vendor_code(self):
+        return self.id
+
     def __str__(self):
         return self.name_and_translate
 
