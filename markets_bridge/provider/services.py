@@ -1,5 +1,6 @@
 import datetime
 import logging
+import os
 from decimal import (
     Decimal,
 )
@@ -199,14 +200,20 @@ def create_category_matching(category_id) -> CategoryMatching:
 
 # TODO: Логика выгрузки товара должна быть переделана, DRF не должен формировать данные под формат озона
 #       Писалось на скорую руку...
+#       #40
 @atomic
-def get_products_for_ozon(host: str, personal_area: PersonalArea) -> dict:
-    result = []
-    raw_personal_area_variables = []
+def get_products_for_import(personal_area: PersonalArea) -> dict:
+    items = []
+    personal_area_variables = SystemVariable.objects.filter(
+        related_personal_areas__personal_area=personal_area,
+    )
+    system_variable_serializer = SystemVariableSerializer(personal_area_variables, many=True)
+    raw_personal_area_variables = system_variable_serializer.data
 
     products = Product.objects.filter(
         is_export_allowed=True,
         warehouse__personal_area=personal_area,
+        upload_date__isnull=True,
     ).select_related(
         'brand',
         'marketplace__currency',
@@ -214,147 +221,172 @@ def get_products_for_ozon(host: str, personal_area: PersonalArea) -> dict:
     )
 
     for product in products:
-        attributes = []
-        category_matching = product.category.matching
-        recipient_category = category_matching.recipient_category
-
-        if not recipient_category:
-            error = f'У товара {product} с ID: {product.id} не сопоставлена категория'
-            logging.info(error)
-            write_log(error)
-
-            continue
-
-        product_characteristic_values = product.characteristic_values.all()
-
-        for value in product_characteristic_values:
-            try:
-                recipient_value = value.matchings.get(
-                    characteristic_matching__category_matching=category_matching,
-                ).recipient_characteristic_value
-            except CharacteristicValueMatching.DoesNotExist:
-                pass
-            else:
-                attributes.append(
-                    dict(
-                        complex_id=0,
-                        id=recipient_value.characteristic.external_id,
-                        values=[dict(dictionary_value_id=recipient_value.external_id)]
-                    )
-                )
-
-        char_matchings_with_default_value = category_matching.characteristic_matchings.filter(
-            recipient_value__isnull=False,
-        )
-
-        for matching in char_matchings_with_default_value:
-            attributes.append(
-                dict(
-                    complex_id=0,
-                    id=matching.recipient_characteristic.characteristic.external_id,
-                    values=[dict(dictionary_value_id=matching.recipient_value.external_id)]
-                )
-            )
-
-        char_mathings_with_default_raw_value = category_matching.characteristic_matchings.filter(
-            value__isnull=False,
-        )
-
-        for matching in char_mathings_with_default_raw_value:
-            attributes.append(
-                dict(
-                    complex_id=0,
-                    id=matching.recipient_characteristic.characteristic.external_id,
-                    values=[dict(value=matching.value)]
-                )
-            )
-
         try:
-            brand_external_id = RecipientCharacteristicValue.objects.only(
-                'external_id',
-            ).get(
-                value__iexact=product.brand.name,
-                characteristic__external_id=85,
-                marketplace_id=2,
-            ).external_id
-        except RecipientCharacteristicValue.DoesNotExist:
-            attributes.append(
-                dict(
-                    complex_id=0,
-                    id=85,
-                    values=[dict(value='Нет бренда')]
-                )
-            )
+            serialized_product = serialize_product_for_import(product)
+        except ValueError as e:
+            error_message = ', '.join(e.args)
+            logging.info(error_message)
+            write_log(error_message)
+            continue
+        else:
+            items.append(serialized_product)
+
+    return dict(items=items, personal_area=raw_personal_area_variables) if items else {}
+
+
+# TODO: Я себе обещаю, что скоро переделаю эту порнографию
+#    (￢_￢)
+@atomic
+def get_request_body_for_product_update(product: Product):
+    items = []
+    personal_area_variables = SystemVariable.objects.filter(
+        related_personal_areas__personal_area=product.warehouse.personal_area,
+    )
+    system_variable_serializer = SystemVariableSerializer(personal_area_variables, many=True)
+    raw_personal_area_variables = system_variable_serializer.data
+
+    try:
+        serialized_product = serialize_product_for_import(product)
+    except ValueError as e:
+        error_message = ', '.join(e.args)
+        logging.info(error_message)
+        write_log(error_message)
+    else:
+        items.append(serialized_product)
+
+    return dict(items=items, personal_area=raw_personal_area_variables) if items else {}
+
+
+def serialize_product_for_import(product: Product) -> dict:
+    attributes = []
+    category_matching = product.category.matching
+    recipient_category = category_matching.recipient_category
+
+    if not recipient_category:
+        error = f'У товара {product} с ID: {product.id} не сопоставлена категория'
+        raise ValueError(error)
+
+    product_characteristic_values = product.characteristic_values.all()
+
+    for value in product_characteristic_values:
+        try:
+            recipient_value = value.matchings.get(
+                characteristic_matching__category_matching=category_matching,
+            ).recipient_characteristic_value
+        except CharacteristicValueMatching.DoesNotExist:
+            pass
         else:
             attributes.append(
                 dict(
                     complex_id=0,
-                    id=85,
-                    values=[dict(dictionary_value_id=brand_external_id)]
+                    id=recipient_value.characteristic.external_id,
+                    values=[dict(dictionary_value_id=recipient_value.external_id)]
                 )
             )
 
+    char_matchings_with_default_value = category_matching.characteristic_matchings.filter(
+        recipient_value__isnull=False,
+    )
+
+    for matching in char_matchings_with_default_value:
         attributes.append(
             dict(
                 complex_id=0,
-                id=9048,
-                values=[dict(value=product.translated_name)]
+                id=matching.recipient_characteristic.characteristic.external_id,
+                values=[dict(dictionary_value_id=matching.recipient_value.external_id)]
             )
         )
 
-        product_name = f'{product.brand.name} {product.translated_name} {product.product_code}'
+    char_matchings_with_default_raw_value = category_matching.characteristic_matchings.filter(
+        value__isnull=False,
+    )
 
+    for matching in char_matchings_with_default_raw_value:
         attributes.append(
             dict(
                 complex_id=0,
-                id=4180,
-                values=[dict(value=product_name)]
+                id=matching.recipient_characteristic.characteristic.external_id,
+                values=[dict(value=matching.value)]
             )
         )
 
-        vat = SystemSettingConfig.objects.only(
-            'vat_rate',
+    try:
+        brand_external_id = RecipientCharacteristicValue.objects.only(
+            'external_id',
         ).get(
-            is_selected=True,
-        ).vat_rate
-
-        product_price = get_converted_product_discounted_price(product)
-        
-        raw_product = dict(
-            attributes=attributes,
-            name=product_name,
-            description_category_id=recipient_category.external_id,
-            images=[f'https://{host}{image_record.image.url}' for image_record in product.images.all()],
-            offer_id=str(product.id),
-            price=str(product_price),
-            vat=vat,
-            dimension_unit='mm',
-            height=int(product.height*10),
-            width=int(product.width*10),
-            depth=int(product.depth*10),
-            weight=int(product.weight*1000),
-            weight_unit='g',
+            value__iexact=product.brand.name,
+            characteristic__external_id=85,
+            marketplace_id=2,
+        ).external_id
+    except RecipientCharacteristicValue.DoesNotExist:
+        attributes.append(
+            dict(
+                complex_id=0,
+                id=85,
+                values=[dict(value='Нет бренда')]
+            )
+        )
+    else:
+        attributes.append(
+            dict(
+                complex_id=0,
+                id=85,
+                values=[dict(dictionary_value_id=brand_external_id)]
+            )
         )
 
-        if product.price != product.discounted_price:
-            old_price = get_converted_product_price(product)
-            raw_product['old_price'] = str(old_price)
-
-        result.append(raw_product)
-        personal_area_variables = SystemVariable.objects.filter(
-            related_personal_areas__personal_area=personal_area,
-        ).values(
-            'key',
-            'value',
+    attributes.append(
+        dict(
+            complex_id=0,
+            id=9048,
+            values=[dict(value=product.translated_name)]
         )
+    )
 
-        system_variable_serializer = SystemVariableSerializer(personal_area_variables, many=True)
-        raw_personal_area_variables = system_variable_serializer.data
+    product_name = f'{product.brand.name} {product.translated_name} {product.product_code}'
 
-        product.upload_date = datetime.datetime.now()
-        product.save()
+    attributes.append(
+        dict(
+            complex_id=0,
+            id=4180,
+            values=[dict(value=product_name)]
+        )
+    )
 
-    return dict(items=result, personal_area=raw_personal_area_variables) if result else {}
+    vat = SystemSettingConfig.objects.only(
+        'vat_rate',
+    ).get(
+        is_selected=True,
+    ).vat_rate
+
+    product_price = get_converted_product_discounted_price(product)
+
+    host = os.getenv('HOST')
+
+    raw_product = dict(
+        attributes=attributes,
+        name=product_name,
+        description_category_id=recipient_category.external_id,
+        images=[f'https://{host}{image_record.image.url}' for image_record in product.images.all()],
+        offer_id=str(product.id),
+        price=str(product_price),
+        vat=vat,
+        dimension_unit='mm',
+        height=int(product.height * 10),
+        width=int(product.width * 10),
+        depth=int(product.depth * 10),
+        weight=int(product.weight * 1000),
+        weight_unit='g',
+    )
+
+    if product.price != product.discounted_price:
+        old_price = get_converted_product_price(product)
+        raw_product['old_price'] = str(old_price)
+
+    product.upload_date = datetime.datetime.now()
+    product.save()
+
+    return raw_product
 
 
 @atomic
