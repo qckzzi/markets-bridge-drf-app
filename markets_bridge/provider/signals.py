@@ -1,5 +1,6 @@
 from django.db.models.signals import (
     post_save,
+    pre_save,
 )
 from django.dispatch import (
     receiver,
@@ -19,6 +20,7 @@ from provider.utils import (
     translate_characteristic,
     translate_characteristic_value,
     translate_product,
+    update_product,
 )
 
 
@@ -43,7 +45,37 @@ def characteristic_value_saved(sender, instance, created, **kwargs):
         translate_characteristic_value(instance.id, instance.value)
 
 
+@receiver(pre_save, sender=Product)
+def before_product_saved(sender, instance: Product, *args, **kwargs):
+    is_need_update_in_recipient_system = False
+    is_need_difference_check = bool(instance.pk and instance.warehouse and instance.upload_date)
+
+    if is_need_difference_check:
+        fields_to_check_coincidence = (
+            'translated_name',
+            'weight',
+            'height',
+            'depth',
+            'width',
+        )
+
+        original_product = Product.objects.only(
+            *fields_to_check_coincidence,
+        ).get(
+            pk=instance.pk,
+        )
+
+        coincidences = [getattr(instance, x) == getattr(original_product, x) for x in fields_to_check_coincidence]
+
+        if not all(coincidences):
+            is_need_update_in_recipient_system = True
+
+    instance.__is_need_update_in_recipient_system = is_need_update_in_recipient_system
+
+
 @receiver(post_save, sender=Product)
 def product_saved(sender, instance, created, **kwargs):
     if not instance.translated_name:
         translate_product(instance.id, instance.name)
+    elif getattr(instance, '__is_need_update_in_recipient_system', False):
+        update_product(instance)

@@ -13,10 +13,14 @@ from markets_bridge.amqp import (
 from provider.enums import (
     ProductActionType,
 )
+from provider.models import (
+    Product,
+)
 from provider.services import (
-    get_products_for_ozon,
+    get_products_for_import,
     get_products_for_price_update,
     get_products_for_stock_update,
+    get_request_body_for_product_update,
 )
 
 
@@ -49,11 +53,19 @@ def load_products():
     personal_areas = get_personal_areas()
 
     for area in personal_areas:
-        products = get_products_for_ozon(os.getenv('HOST'), area)
+        products = get_products_for_import(area)
 
         if products:
             message = {'products': products, 'method': ProductActionType.LOAD_PRODUCTS}
             publish_to_outloading_queue(json.dumps(message))
+
+
+def update_product(product: Product):
+    body = get_request_body_for_product_update(product)
+
+    if body:
+        message = {'products': body, 'method': ProductActionType.LOAD_PRODUCTS}
+        publish_to_outloading_queue(json.dumps(message))
 
 
 def update_product_prices():
