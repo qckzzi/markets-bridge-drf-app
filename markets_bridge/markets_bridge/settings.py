@@ -77,6 +77,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'markets_bridge.wsgi.application'
 
+#AMQP
 AMQP_CONNECTION_PARAMETERS = {
     'host': 'localhost',
     'port': 5672,
@@ -84,6 +85,7 @@ AMQP_CONNECTION_PARAMETERS = {
     'blocked_connection_timeout': 300,
 }
 
+#Celery
 CELERY_BROKER_URL = 'amqp://localhost'
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 
@@ -115,11 +117,16 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+LOGIN_URL = 'admin:login'
+
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.BasicAuthentication',
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-    )
+    ),
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
+    'PAGE_SIZE': 25,
 }
 
 
@@ -140,5 +147,19 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
 
+# Swagger
 DEVELOPER_CONTACT_NAME = os.getenv('DEVELOPER_CONTACT_NAME')
 DEVELOPER_CONTACT_URL = os.getenv('DEVELOPER_CONTACT_URL')
+SWAGGER_SETTINGS = {
+    'USE_SESSION_AUTH': True,
+    'SECURITY_DEFINITIONS': {
+        'Bearer': {
+            'type': 'apiKey',
+            'name': 'Authorization',
+            'in': 'header',
+        },
+        "basicAuth": {
+            "type": "basic",
+        }
+    }
+}

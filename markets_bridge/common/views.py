@@ -4,9 +4,6 @@ from rest_framework import (
 from rest_framework.decorators import (
     action,
 )
-from rest_framework.permissions import (
-    IsAuthenticated,
-)
 from rest_framework.response import (
     Response,
 )
@@ -14,9 +11,6 @@ from rest_framework.viewsets import (
     GenericViewSet,
     ModelViewSet,
     ReadOnlyModelViewSet,
-)
-from rest_framework_simplejwt.authentication import (
-    JWTAuthentication,
 )
 
 from common.serializers import (
@@ -29,26 +23,23 @@ from common.services import (
     get_logs,
     get_system_variables,
 )
+from core.mixins import (
+    AuthenticationMixin,
+)
 
 
-class SystemVariablesAPIViewSet(ReadOnlyModelViewSet):
+class SystemVariablesAPIViewSet(AuthenticationMixin, ReadOnlyModelViewSet):
     queryset = get_system_variables()
     serializer_class = SystemVariableSerializer
     lookup_field = 'key'
-    authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]
 
 
-class LogsAPIViewSet(ModelViewSet):
+class LogsAPIViewSet(AuthenticationMixin, ModelViewSet):
     serializer_class = LogSerializer
-    authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]
     queryset = get_logs()
 
 
-class CharacteristicMatchingAPIViewSet(GenericViewSet):
-    authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]
+class CharacteristicMatchingAPIViewSet(AuthenticationMixin, GenericViewSet):
     serializer_class = CharacteristicMatchingSerializer
 
     @action(['POST'], detail=False)

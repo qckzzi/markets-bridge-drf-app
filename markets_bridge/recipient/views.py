@@ -1,19 +1,16 @@
 from rest_framework import (
     status,
 )
-from rest_framework.permissions import (
-    IsAuthenticated,
-)
 from rest_framework.response import (
     Response,
 )
 from rest_framework.viewsets import (
     ModelViewSet,
 )
-from rest_framework_simplejwt.authentication import (
-    JWTAuthentication,
-)
 
+from core.mixins import (
+    AuthenticationMixin,
+)
 from recipient.models import (
     Category,
     Characteristic,
@@ -31,11 +28,9 @@ from recipient.services import (
 )
 
 
-class CategoryAPIViewSet(ModelViewSet):
+class CategoryAPIViewSet(AuthenticationMixin, ModelViewSet):
     serializer_class = CategorySerializer
     queryset = Category.objects.all()
-    authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]
 
     def create(self, request, *args, **kwargs):
         category, is_new = update_or_create_category(request.data)
@@ -49,11 +44,9 @@ class CategoryAPIViewSet(ModelViewSet):
         return Response(data=serializer.data, status=http_status)
 
 
-class CharacteristicAPIViewSet(ModelViewSet):
+class CharacteristicAPIViewSet(AuthenticationMixin, ModelViewSet):
     serializer_class = CharacteristicSerializer
     queryset = Characteristic.objects.all()
-    authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]
 
     def create(self, request, *args, **kwargs):
         characteristic, is_new = update_or_create_characteristic(request.data)
@@ -67,11 +60,9 @@ class CharacteristicAPIViewSet(ModelViewSet):
         return Response(data=serializer.data, status=http_status)
 
 
-class CharacteristicValueAPIViewSet(ModelViewSet):
+class CharacteristicValueAPIViewSet(AuthenticationMixin, ModelViewSet):
     serializer_class = CharacteristicValueSerializer
     queryset = CharacteristicValue.objects.all()
-    authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]
 
     def create(self, request, *args, **kwargs):
         characteristic_value, is_new = update_or_create_characteristic_value(request.data)
