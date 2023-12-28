@@ -9,14 +9,9 @@ from django.dispatch import (
 from common.models import (
     CategoryMatching,
     CharacteristicMatching,
-    CharacteristicValueMatching,
 )
 from common.services import (
     get_recipient_category_id_by_category_mathing_id,
-)
-from recipient.models import (
-    Characteristic,
-    CharacteristicValue,
 )
 from recipient.utils import (
     update_recipient_attributes,
