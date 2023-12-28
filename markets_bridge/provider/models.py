@@ -116,6 +116,14 @@ class CharacteristicValue(models.Model):
         on_delete=models.PROTECT,
         related_name='provider_characteristic_values',
     )
+    recipient_characteristic_value = models.ForeignKey(
+        'recipient.CharacteristicValue',
+        verbose_name='Значение характеристики в системе получателя',
+        on_delete=models.SET_NULL,
+        related_name='provider_characteristic_values',
+        null=True,
+        blank=True,
+    )
 
     @property
     def value_and_translate(self):

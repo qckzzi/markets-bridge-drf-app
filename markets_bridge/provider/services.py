@@ -90,9 +90,12 @@ def create_or_update_product(product_data: dict) -> tuple[Product, bool]:
     external_id = product_data.get('external_id')
 
     value_external_ids = []
+    values = []
 
     if product_data.get('characteristic_value_external_ids'):
         value_external_ids = product_data.pop('characteristic_value_external_ids')
+    elif product_data.get('characteristic_values'):
+        values = product_data.pop('characteristic_values')
 
     product, is_new = Product.objects.get_or_create(
         external_id=external_id,
@@ -108,6 +111,16 @@ def create_or_update_product(product_data: dict) -> tuple[Product, bool]:
     elif value_external_ids:
         characteristic_values = CharacteristicValue.objects.filter(
             external_id__in=value_external_ids,
+            marketplace_id=marketplace_id,
+        )
+
+        ProductValue.objects.bulk_create(
+            ProductValue(product=product, value_id=value_id)
+            for value_id in characteristic_values.values_list('id', flat=True)
+        )
+    elif values:
+        characteristic_values = CharacteristicValue.objects.filter(
+            value__in=values,
             marketplace_id=marketplace_id,
         )
 
@@ -145,25 +158,37 @@ def get_or_create_category(category_data: dict) -> tuple[Category, bool]:
 def update_or_create_characteristic(characteristic_data: dict) -> tuple[Characteristic, bool]:
     """Создает новую характеристику, либо обновляет ее связи с категориями."""
 
-    external_id = characteristic_data.get('external_id')
-    category_external_ids = characteristic_data.pop('category_external_ids')
     marketplace_id = characteristic_data.get('marketplace_id')
-
-    characteristic, is_new = Characteristic.objects.get_or_create(
+    external_id = characteristic_data.get('external_id')
+    kwargs_to_characteristic_getting = dict(
         external_id=external_id,
         marketplace_id=marketplace_id,
         defaults=characteristic_data,
     )
 
-    categories = Category.objects.filter(
-        external_id__in=category_external_ids,
-        marketplace_id=marketplace_id,
+    if characteristic_data.get('name'):
+        kwargs_to_characteristic_getting['name'] = characteristic_data.get('name')
+
+    category_external_ids = []
+
+    if characteristic_data.get('category_external_ids'):
+        category_external_ids = characteristic_data.pop('category_external_ids')
+
+
+    characteristic, is_new = Characteristic.objects.get_or_create(
+        **kwargs_to_characteristic_getting,
     )
 
-    if is_new:
-        characteristic.categories.set(categories)
-    else:
-        characteristic.categories.add(*categories)
+    if category_external_ids:
+        categories = Category.objects.filter(
+            external_id__in=category_external_ids,
+            marketplace_id=marketplace_id,
+        )
+
+        if is_new:
+            characteristic.categories.set(categories)
+        else:
+            characteristic.categories.add(*categories)
 
     return characteristic, is_new
 
@@ -172,21 +197,35 @@ def get_or_create_characteristic_value(value_data: dict) -> tuple[Characteristic
     """Создает новое значение характеристики, либо обновляет его."""
 
     external_id = value_data.get('external_id')
-    characteristic_external_id = value_data.pop('characteristic_external_id')
     marketplace_id = value_data.get('marketplace_id')
-
-    characteristic = get_object_or_404(
-        Characteristic,
-        external_id=characteristic_external_id,
+    kwargs_to_characteristic_getting = dict(
+        external_id=external_id,
         marketplace_id=marketplace_id,
+        defaults=value_data,
     )
+
+    if value_data.get('value'):
+        kwargs_to_characteristic_getting['value'] = value_data['value']
+
+    if value_data.get('characteristic_name'):
+        characteristic_name = value_data.pop('characteristic_name')
+        characteristic = get_object_or_404(
+            Characteristic,
+            name=characteristic_name,
+            marketplace_id=marketplace_id,
+        )
+    else:
+        characteristic_external_id = value_data.pop('characteristic_external_id')
+        characteristic = get_object_or_404(
+            Characteristic,
+            external_id=characteristic_external_id,
+            marketplace_id=marketplace_id,
+        )
 
     value_data['characteristic_id'] = characteristic.id
 
     characteristic_value, is_new = CharacteristicValue.objects.get_or_create(
-        external_id=external_id,
-        marketplace_id=marketplace_id,
-        defaults=value_data,
+        **kwargs_to_characteristic_getting,
     )
 
     return characteristic_value, is_new
@@ -276,6 +315,15 @@ def serialize_product_for_import(product: Product) -> dict:
         except CharacteristicValueMatching.DoesNotExist:
             pass
         else:
+            attributes.append(
+                dict(
+                    complex_id=0,
+                    id=recipient_value.characteristic.external_id,
+                    values=[dict(dictionary_value_id=recipient_value.external_id)]
+                )
+            )
+
+        if recipient_value := value.recipient_characteristic_value:
             attributes.append(
                 dict(
                     complex_id=0,
