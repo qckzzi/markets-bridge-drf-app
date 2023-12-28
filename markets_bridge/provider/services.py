@@ -205,7 +205,7 @@ def get_or_create_characteristic_value(value_data: dict) -> tuple[Characteristic
     )
 
     if value_data.get('value'):
-        kwargs_to_characteristic_getting['value'] = value_data.get('name')
+        kwargs_to_characteristic_getting['value'] = value_data['value']
 
     if value_data.get('characteristic_name'):
         characteristic_name = value_data.pop('characteristic_name')
