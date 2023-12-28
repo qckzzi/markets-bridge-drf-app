@@ -323,6 +323,15 @@ def serialize_product_for_import(product: Product) -> dict:
                 )
             )
 
+        if recipient_value := value.recipient_characteristic_value:
+            attributes.append(
+                dict(
+                    complex_id=0,
+                    id=recipient_value.characteristic.external_id,
+                    values=[dict(dictionary_value_id=recipient_value.external_id)]
+                )
+            )
+
     char_matchings_with_default_value = category_matching.characteristic_matchings.filter(
         recipient_value__isnull=False,
     )

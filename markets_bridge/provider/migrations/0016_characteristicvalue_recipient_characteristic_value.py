@@ -18,6 +18,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='characteristicvalue',
             name='recipient_characteristic_value',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='provider_characteristic_values', to='recipient.characteristicvalue', verbose_name='Характеристика с системе получателя'),
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='provider_characteristic_values', to='recipient.characteristicvalue', verbose_name='Значение характеристики в системе получателя'),
         ),
     ]
