@@ -116,12 +116,10 @@ class CharacteristicValue(models.Model):
         on_delete=models.PROTECT,
         related_name='provider_characteristic_values',
     )
-    recipient_characteristic_value = models.ForeignKey(
+    recipient_characteristic_values = models.ManyToManyField(
         'recipient.CharacteristicValue',
-        verbose_name='Значение характеристики в системе получателя',
-        on_delete=models.SET_NULL,
+        verbose_name='Значения характеристики в системе получателя',
         related_name='provider_characteristic_values',
-        null=True,
         blank=True,
     )
 
