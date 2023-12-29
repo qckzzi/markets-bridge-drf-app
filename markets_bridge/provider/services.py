@@ -323,27 +323,34 @@ def serialize_product_for_import(product: Product) -> dict:
                 )
             )
 
-        if recipient_value := value.recipient_characteristic_value:
-            attributes.append(
-                dict(
-                    complex_id=0,
-                    id=recipient_value.characteristic.external_id,
-                    values=[dict(dictionary_value_id=recipient_value.external_id)]
+        if recipient_values := value.recipient_characteristic_values.all():
+            for recipient_value in recipient_values:
+                print(recipient_value.value)
+                attributes.append(
+                    dict(
+                        complex_id=0,
+                        id=recipient_value.characteristic.external_id,
+                        values=[dict(dictionary_value_id=recipient_value.external_id)]
+                    )
                 )
-            )
 
     char_matchings_with_default_value = category_matching.characteristic_matchings.filter(
         recipient_value__isnull=False,
     )
 
+    attribute_ids = [attribute['id'] for attribute in attributes]
+
     for matching in char_matchings_with_default_value:
-        attributes.append(
-            dict(
-                complex_id=0,
-                id=matching.recipient_characteristic.characteristic.external_id,
-                values=[dict(dictionary_value_id=matching.recipient_value.external_id)]
+        characteristic_id = matching.recipient_characteristic.characteristic.external_id
+
+        if characteristic_id not in attribute_ids:
+            attributes.append(
+                dict(
+                    complex_id=0,
+                    id=matching.recipient_characteristic.characteristic.external_id,
+                    values=[dict(dictionary_value_id=matching.recipient_value.external_id)]
+                )
             )
-        )
 
     char_matchings_with_default_raw_value = category_matching.characteristic_matchings.filter(
         value__isnull=False,

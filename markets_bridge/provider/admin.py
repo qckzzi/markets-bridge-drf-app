@@ -105,7 +105,7 @@ class CharacteristicValueAdmin(admin.ModelAdmin):
         'characteristic',
     )
     autocomplete_fields = (
-        'recipient_characteristic_value',
+        'recipient_characteristic_values',
     )
 
 
@@ -113,7 +113,7 @@ class ProductValueAdmin(admin.TabularInline):
     readonly_fields = (
         'characteristic',
         'value',
-        'recipient_characteristic_value',
+        'recipient_characteristic_values',
     )
     model = ProductValue
     extra = 0
@@ -123,10 +123,15 @@ class ProductValueAdmin(admin.TabularInline):
 
     characteristic.short_description = 'Характеристика'
 
-    def recipient_characteristic_value(self, product_value):
-        return product_value.value.recipient_characteristic_value or 'Не сопоставлено'
+    def recipient_characteristic_values(self, product_value):
+        return ', '.join(
+            product_value.value.recipient_characteristic_values.values_list(
+                'value',
+                flat=True,
+            )
+        ) or 'Не сопоставлено'
 
-    recipient_characteristic_value.short_description = 'Значение характеристики с системе получателя'
+    recipient_characteristic_values.short_description = 'Значения характеристики с системе получателя'
 
 
 class ProductImageAdmin(admin.TabularInline):
