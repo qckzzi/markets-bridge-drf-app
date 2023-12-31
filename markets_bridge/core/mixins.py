@@ -1,3 +1,6 @@
+from django.contrib.admin import (
+    SimpleListFilter,
+)
 from rest_framework.authentication import (
     BasicAuthentication,
     SessionAuthentication,
@@ -28,3 +31,11 @@ class AuthenticationMixin:
 
     authentication_classes = (JWTAuthentication, BasicAuthentication, SessionAuthentication)
     permission_classes = (IsAuthenticated,)
+
+
+class YerOrNoFilterMixin(SimpleListFilter):
+    def lookups(self, request, model_admin):
+        return (
+            (True, 'Да'),
+            (False, 'Нет'),
+        )

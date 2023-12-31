@@ -1,3 +1,7 @@
+from decimal import (
+    Decimal,
+)
+
 from django import (
     forms,
 )
@@ -5,18 +9,12 @@ from django.contrib import (
     admin,
     messages,
 )
-from django.contrib.admin import (
-    SimpleListFilter,
-)
 from django.contrib.admin.helpers import (
     ActionForm,
 )
 from django.utils.html import (
     format_html,
     mark_safe,
-)
-from django.utils.translation import (
-    gettext_lazy as _,
 )
 from django_admin_listfilter_dropdown.filters import (
     RelatedOnlyDropdownFilter,
@@ -27,6 +25,10 @@ from rest_framework.reverse import (
 
 from common.models import (
     Warehouse,
+)
+from core.admin import (
+    BaseNullFilter,
+    BaseYesOrNoFilter,
 )
 from provider.models import (
     Brand,
@@ -161,15 +163,9 @@ class ProductActionForm(ActionForm):
     )
 
 
-class IsMatchedCategoryFilter(SimpleListFilter):
-    title = _('Сопоставлена ли категория?')
+class IsMatchedCategoryFilter(BaseYesOrNoFilter):
+    title = 'Сопоставлена ли категория?'
     parameter_name = 'is_matched_category'
-
-    def lookups(self, request, model_admin):
-        return (
-            (True, _('Да')),
-            (False, _('Нет')),
-        )
 
     def queryset(self, request, queryset):
         value = self.value()
@@ -181,6 +177,57 @@ class IsMatchedCategoryFilter(SimpleListFilter):
             )
 
         return queryset
+
+
+class BaseDimensionsBlankFilter(BaseYesOrNoFilter):
+    dimension_name = None
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.blank_filter_kwargs = {f'{self.dimension_name}': Decimal('0.00')}
+        self.not_blank_filter_kwargs = {f'{self.dimension_name}__gt': Decimal('0.00')}
+
+    def queryset(self, request, queryset):
+        value = self.value()
+
+        if value is not None:
+            value_is_blank = value == 'True'
+            filter_kwargs = self.blank_filter_kwargs if value_is_blank else self.not_blank_filter_kwargs
+            queryset = queryset.filter(
+                **filter_kwargs,
+            )
+
+        return queryset
+
+class WidthIsBlankFilter(BaseDimensionsBlankFilter):
+    dimension_name = 'width'
+    title = 'Пустая ширина'
+    parameter_name = 'width_is_blank'
+
+
+class HeightIsBlankFilter(BaseDimensionsBlankFilter):
+    dimension_name = 'height'
+    title = 'Пустая высота'
+    parameter_name = 'height_is_blank'
+
+
+class DepthIsBlankFilter(BaseDimensionsBlankFilter):
+    dimension_name = 'depth'
+    title = 'Пустая глубина'
+    parameter_name = 'depth_is_blank'
+
+
+class WeightIsBlankFilter(BaseDimensionsBlankFilter):
+    dimension_name = 'weight'
+    title = 'Пустой вес'
+    parameter_name = 'weight_is_blank'
+
+
+class WarehouseIsNullFilter(BaseNullFilter):
+    field_name = 'warehouse'
+    title = 'Отсутствует склад'
+    parameter_name = 'warehouse_is_null'
 
 
 @admin.register(Product)
@@ -245,6 +292,11 @@ class ProductAdmin(admin.ModelAdmin):
         IsMatchedCategoryFilter,
         ('category', RelatedOnlyDropdownFilter),
         ('marketplace', RelatedOnlyDropdownFilter),
+        WarehouseIsNullFilter,
+        WidthIsBlankFilter,
+        HeightIsBlankFilter,
+        DepthIsBlankFilter,
+        WeightIsBlankFilter,
     )
     autocomplete_fields = (
         'warehouse',
