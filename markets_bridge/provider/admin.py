@@ -42,6 +42,10 @@ from provider.models import (
 from provider.services import (
     update_product_export_allowance,
 )
+from provider.strings import (
+    BLANK_VALUE_FOR_UPDATE_MESSAGE,
+    UPDATE_PRODUCT_IS_SUCCESS,
+)
 
 
 @admin.register(Category)
@@ -161,6 +165,26 @@ class ProductActionForm(ActionForm):
         label='Коэффициент наценки, %',
         required=False,
     )
+    width = forms.DecimalField(
+        min_value=0,
+        label='Ширина, см',
+        required=False,
+    )
+    height = forms.DecimalField(
+        min_value=0,
+        label='Высота, см',
+        required=False,
+    )
+    depth = forms.DecimalField(
+        min_value=0,
+        label='Глубина, см',
+        required=False,
+    )
+    weight = forms.DecimalField(
+        min_value=0,
+        label='Вес товара, кг',
+        required=False,
+    )
 
 
 class IsMatchedCategoryFilter(BaseYesOrNoFilter):
@@ -269,6 +293,7 @@ class ProductAdmin(admin.ModelAdmin):
     fields = (
         ('vendor_code', 'external_id'),
         ('product_code', 'name', 'translated_name'),
+        ('description', 'translated_description'),
         'brand',
         'url',
         ('price', 'discounted_price', 'currency', 'markup'),
@@ -310,6 +335,10 @@ class ProductAdmin(admin.ModelAdmin):
         'allow_export',
         'disallow_export',
         'update_markup',
+        'update_width',
+        'update_height',
+        'update_depth',
+        'update_weight',
     )
     action_form = ProductActionForm
     list_per_page = 25
@@ -357,6 +386,41 @@ class ProductAdmin(admin.ModelAdmin):
         messages.success(request, f'Наценка в {markup}% успешно обновлена у товаров!')
 
     update_markup.short_description = 'Изменить наценку'
+
+    def update_width(self, request, queryset):
+        self._update_value(request, queryset, 'width')
+
+    update_width.short_description = 'Изменить ширину'
+
+    def update_height(self, request, queryset):
+        self._update_value(request, queryset, 'height')
+
+    update_height.short_description = 'Изменить высоту'
+
+    def update_depth(self, request, queryset):
+        self._update_value(request, queryset, 'depth')
+
+    update_depth.short_description = 'Изменить глубину'
+
+    def update_weight(self, request, queryset):
+        self._update_value(request, queryset, 'weight')
+
+    update_weight.short_description = 'Изменить вес'
+
+    def _update_value(self, request, queryset, field_name):
+        form = self.action_form(request.POST)
+        form.full_clean()
+        value = form.cleaned_data[field_name]
+
+        if not value:
+            messages.error(request, BLANK_VALUE_FOR_UPDATE_MESSAGE)
+            return
+
+        queryset.update(
+            **{field_name:value},
+        )
+        messages.success(request, UPDATE_PRODUCT_IS_SUCCESS)
+
 
     def currency(self, product):
         return product.category.marketplace.currency.name
