@@ -182,6 +182,18 @@ class Product(models.Model):
         null=True,
         blank=True,
     )
+    description = models.TextField(
+        verbose_name='Описание',
+        default='',
+        null=True,
+        blank=True,
+    )
+    translated_description = models.TextField(
+        verbose_name='Переведенное описание',
+        default='',
+        null=True,
+        blank=True,
+    )
     brand = models.ForeignKey(
         'provider.Brand',
         on_delete=models.SET_NULL,
