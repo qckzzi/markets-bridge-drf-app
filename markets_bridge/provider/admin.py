@@ -293,6 +293,7 @@ class ProductAdmin(admin.ModelAdmin):
     fields = (
         ('vendor_code', 'external_id'),
         ('product_code', 'name', 'translated_name'),
+        ('description', 'translated_description'),
         'brand',
         'url',
         ('price', 'discounted_price', 'currency', 'markup'),
