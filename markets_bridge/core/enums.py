@@ -23,3 +23,19 @@ class EntityType(BaseEnumerate):
         CHARACTERISTIC: 'Характеристика',
         CHARACTERISTIC_VALUE: 'Значение характеристики',
     }
+
+
+class TranslationTargets(BaseEnumerate):
+    PRODUCT_NAME = 'PRODUCT_NAME'
+    PRODUCT_DESCRIPTION = 'PRODUCT_DESCRIPTION'
+    CATEGORY_NAME = 'CATEGORY_NAME'
+    CHARACTERISTIC_NAME = 'CHARACTERISTIC_NAME'
+    CHARACTERISTIC_VALUE = 'CHARACTERISTIC_VALUE'
+
+    labels = {
+        PRODUCT_NAME: 'Наименование товара',
+        PRODUCT_DESCRIPTION: 'Описание товара',
+        CATEGORY_NAME: 'Наименование категории',
+        CHARACTERISTIC_NAME: 'Наименование характеристики',
+        CHARACTERISTIC_VALUE: 'Значение характеристики',
+    }

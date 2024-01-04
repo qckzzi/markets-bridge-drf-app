@@ -5,7 +5,7 @@ from common.services import (
     get_personal_areas,
 )
 from core.enums import (
-    EntityType,
+    TranslationTargets,
 )
 from markets_bridge.amqp import (
     publish,
@@ -25,19 +25,23 @@ from provider.services import (
 
 
 def translate_product(entity_id: int, text: str):
-    translate_entity(entity_id, text, EntityType.PRODUCT)
+    translate_entity(entity_id, text, TranslationTargets.PRODUCT_NAME)
+
+
+def translate_product_description(entity_id, text: str):
+    translate_entity(entity_id, text, TranslationTargets.PRODUCT_DESCRIPTION)
 
 
 def translate_category(entity_id: int, text: str):
-    translate_entity(entity_id, text, EntityType.CATEGORY)
+    translate_entity(entity_id, text, TranslationTargets.CATEGORY_NAME)
 
 
 def translate_characteristic(entity_id: int, text: str):
-    translate_entity(entity_id, text, EntityType.CHARACTERISTIC)
+    translate_entity(entity_id, text, TranslationTargets.CHARACTERISTIC_NAME)
 
 
 def translate_characteristic_value(entity_id: int, text: str):
-    translate_entity(entity_id, text, EntityType.CHARACTERISTIC_VALUE)
+    translate_entity(entity_id, text, TranslationTargets.CHARACTERISTIC_VALUE)
 
 
 def translate_entity(entity_id: int, text: str, entity_type: str):
