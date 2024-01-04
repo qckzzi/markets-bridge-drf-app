@@ -20,6 +20,7 @@ from provider.utils import (
     translate_characteristic,
     translate_characteristic_value,
     translate_product,
+    translate_product_description,
     update_product,
 )
 
@@ -75,7 +76,11 @@ def before_product_saved(sender, instance: Product, *args, **kwargs):
 
 @receiver(post_save, sender=Product)
 def product_saved(sender, instance, created, **kwargs):
-    if not instance.translated_name:
+    if instance.name and not instance.translated_name:
         translate_product(instance.id, instance.name)
-    elif getattr(instance, '__is_need_update_in_recipient_system', False):
+
+    if instance.description and not instance.translated_description:
+        translate_product_description(instance.id, instance.description)
+
+    if getattr(instance, '__is_need_update_in_recipient_system', False):
         update_product(instance)
