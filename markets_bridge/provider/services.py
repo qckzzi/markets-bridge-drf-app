@@ -325,7 +325,6 @@ def serialize_product_for_import(product: Product) -> dict:
 
         if recipient_values := value.recipient_characteristic_values.all():
             for recipient_value in recipient_values:
-                print(recipient_value.value)
                 attributes.append(
                     dict(
                         complex_id=0,
@@ -407,6 +406,15 @@ def serialize_product_for_import(product: Product) -> dict:
             values=[dict(value=product_name)]
         )
     )
+
+    if product.translated_description:
+        attributes.append(
+            dict(
+                complex_id=0,
+                id=4191,
+                values=[dict(value=product.translated_description)]
+            )
+        )
 
     vat = SystemSettingConfig.objects.only(
         'vat_rate',
