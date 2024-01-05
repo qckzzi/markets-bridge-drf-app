@@ -200,6 +200,9 @@ class LogAdmin(admin.ModelAdmin):
         'entry',
         'timestamp',
     )
+    list_filter = (
+        'service_name',
+    )
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
