@@ -3,6 +3,7 @@ from pathlib import (
     Path,
 )
 
+import sentry_sdk
 from celery.schedules import (
     crontab,
 )
@@ -163,3 +164,9 @@ SWAGGER_SETTINGS = {
         }
     }
 }
+
+# Sentry
+sentry_dsn = os.getenv('SENTRY_DSN')
+
+if sentry_dsn:
+    sentry_sdk.init(dsn=sentry_dsn, enable_tracing=True)
