@@ -203,6 +203,28 @@ class IsMatchedCategoryFilter(BaseYesOrNoFilter):
         return queryset
 
 
+class NotAvailableFilter(BaseYesOrNoFilter):
+    title = 'Нет в наличии'
+    parameter_name = 'not_available'
+
+    def queryset(self, request, queryset):
+        value = self.value()
+
+        if value is not None:
+            is_not_available = value == 'True'
+
+            if is_not_available:
+                queryset = queryset.filter(
+                    stock_quantity=0,
+                )
+            else:
+                queryset = queryset.filter(
+                    stock_quantity__gt=0,
+                )
+
+        return queryset
+
+
 class BaseDimensionsBlankFilter(BaseYesOrNoFilter):
     dimension_name = None
 
@@ -316,12 +338,14 @@ class ProductAdmin(admin.ModelAdmin):
         'is_export_allowed',
         IsMatchedCategoryFilter,
         ('category', RelatedOnlyDropdownFilter),
+        ('brand', RelatedOnlyDropdownFilter),
         ('marketplace', RelatedOnlyDropdownFilter),
         WarehouseIsNullFilter,
         WidthIsBlankFilter,
         HeightIsBlankFilter,
         DepthIsBlankFilter,
         WeightIsBlankFilter,
+        NotAvailableFilter,
     )
     autocomplete_fields = (
         'warehouse',
