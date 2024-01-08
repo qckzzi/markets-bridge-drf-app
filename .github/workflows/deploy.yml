@@ -51,3 +51,12 @@ jobs:
           script: |
             systemctl restart gunicorn.service
             systemctl restart gunicorn.socket
+
+      - name: Restart celery service
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USER_NAME }}
+          key: ${{ secrets.PRIVATE_KEY }}
+          script: |
+            systemctl restart celery.service
