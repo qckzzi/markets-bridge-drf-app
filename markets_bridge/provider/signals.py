@@ -54,6 +54,7 @@ def before_product_saved(sender, instance: Product, *args, **kwargs):
     if is_need_difference_check:
         fields_to_check_coincidence = (
             'translated_name',
+            'translated_description',
             'weight',
             'height',
             'depth',

@@ -203,23 +203,23 @@ class IsMatchedCategoryFilter(BaseYesOrNoFilter):
         return queryset
 
 
-class NotAvailableFilter(BaseYesOrNoFilter):
-    title = 'Нет в наличии'
-    parameter_name = 'not_available'
+class AvailableFilter(BaseYesOrNoFilter):
+    title = 'В наличии'
+    parameter_name = 'available'
 
     def queryset(self, request, queryset):
         value = self.value()
 
         if value is not None:
-            is_not_available = value == 'True'
+            is_available = value == 'True'
 
-            if is_not_available:
+            if is_available:
                 queryset = queryset.filter(
-                    stock_quantity=0,
+                    stock_quantity__gt=0,
                 )
             else:
                 queryset = queryset.filter(
-                    stock_quantity__gt=0,
+                    stock_quantity=0,
                 )
 
         return queryset
@@ -289,6 +289,7 @@ class ProductAdmin(admin.ModelAdmin):
         'category',
         'is_export_allowed',
         'marketplace',
+        'stock_quantity',
     )
     list_display_links = (
         'vendor_code',
@@ -345,7 +346,7 @@ class ProductAdmin(admin.ModelAdmin):
         HeightIsBlankFilter,
         DepthIsBlankFilter,
         WeightIsBlankFilter,
-        NotAvailableFilter,
+        AvailableFilter,
     )
     autocomplete_fields = (
         'warehouse',
