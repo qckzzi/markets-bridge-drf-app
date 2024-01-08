@@ -1,4 +1,6 @@
 [![Python 3.12](https://img.shields.io/badge/python-3.12-green.svg)](https://www.python.org/downloads/release/python-3120/)
+<img src="https://github.com/qckzzi/markets-bridge-drf-app/workflows/Deploy%20to%20Server/badge.svg?branch=main"><br>
+
 # Markets-Bridge
 ## Описание
 **Markets-Bridge** - B2B система-агрегатор товаров. Основные задачи системы:
