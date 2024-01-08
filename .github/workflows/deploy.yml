@@ -45,9 +45,9 @@ jobs:
       - name: Restart service
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.HOST_IP }}
-          username: ${{ secrets.USER }}
-          key: ${{ secrets.KEY }}
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USER_NAME }}
+          key: ${{ secrets.PRIVATE_KEY }}
           script: |
             systemctl restart gunicorn.service
             systemctl restart gunicorn.socket
