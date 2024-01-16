@@ -9,6 +9,9 @@ from django.db import (
 from common.models import (
     CategoryMatching,
 )
+from common.services import (
+    get_default_markup,
+)
 
 
 class Category(models.Model):
@@ -218,10 +221,9 @@ class Product(models.Model):
         decimal_places=2,
         default=Decimal('0.00'),
     )
-    # TODO: Дать возможность пользователю системы самому указывать наценку по умолчанию
     markup = models.PositiveIntegerField(
         verbose_name='Коэффициент наценки стоимости товара, %',
-        default=60,
+        blank=True,
     )
     stock_quantity = models.IntegerField(
         verbose_name='Количество в наличии',
@@ -301,6 +303,9 @@ class Product(models.Model):
         blank=True,
     )
 
+    def __str__(self):
+        return self.name_and_translate
+
     @property
     def name_and_translate(self):
         return f'{self.name} ({self.translated_name or "Перевод отсутствует"})'
@@ -317,12 +322,15 @@ class Product(models.Model):
     def vendor_code(self):
         return self.id
 
-    def __str__(self):
-        return self.name_and_translate
+    def save(self, *args, **kwargs):
+        if not self.markup:
+            self.markup = get_default_markup()
+
+        super().save(*args, **kwargs)
 
     class Meta:
-        verbose_name = 'Товар с системе поставщика'
-        verbose_name_plural = 'Товары с системе поставщика'
+        verbose_name = 'Товар в системе поставщика'
+        verbose_name_plural = 'Товары в системе поставщика'
 
 
 class ProductValue(models.Model):

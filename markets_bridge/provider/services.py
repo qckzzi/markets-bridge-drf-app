@@ -253,6 +253,10 @@ def get_products_for_import(personal_area: PersonalArea) -> dict:
         is_export_allowed=True,
         warehouse__personal_area=personal_area,
         upload_date__isnull=True,
+        width__gt=0,
+        height__gt=0,
+        depth__gt=0,
+        weight__gt=0,
     ).select_related(
         'brand',
         'marketplace__currency',
@@ -548,12 +552,34 @@ def _get_converted_product_abstract_price(product: Product, price_field_name: Li
         marketplace__provider_products=product,
     )
 
-    converted_product_price = convert_value(product.currency_code, 'RUB', getattr(product, price_field_name))
-    converted_logistics_cost = convert_value(product_logistics.currency_code, 'RUB', product_logistics.cost)
-    logistics_cost_per_product_weight = converted_logistics_cost * product.weight
-    product_price_with_markup = converted_product_price + converted_product_price * Decimal(product.markup/100)
+    converted_logistics_cost = convert_value(
+        product_logistics.currency_code,
+        'RUB',
+        product_logistics.cost
+    )
 
-    return product_price_with_markup + logistics_cost_per_product_weight
+    converted_logistics_shipment_cost = convert_value(
+        product_logistics.currency_code,
+        'RUB',
+        product_logistics.shipment_cost
+    )
+
+    volumetric_weight = (product.width*product.height*product.depth)/5000
+    physical_weight = product.weight
+    used_weight = volumetric_weight if volumetric_weight > physical_weight else physical_weight
+
+    logistics_cost = converted_logistics_cost*10*used_weight + converted_logistics_shipment_cost
+    logistics_cost_with_markup = logistics_cost + logistics_cost*Decimal(product_logistics.markup/100)
+
+    converted_product_price = convert_value(
+        product.currency_code,
+        'RUB',
+        getattr(product, price_field_name)
+    )
+
+    product_price_with_markup = converted_product_price + converted_product_price*Decimal(product.markup/100)
+
+    return product_price_with_markup + logistics_cost_with_markup
 
 
 def get_or_create_brand(brand_data: dict) -> tuple[Brand, bool]:
