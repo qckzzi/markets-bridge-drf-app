@@ -73,8 +73,18 @@ class Logistics(models.Model):
     cost = models.DecimalField(
         decimal_places=2,
         max_digits=8,
-        verbose_name='Стоимость за кг',
+        verbose_name='Стоимость логистики за 100 г',
         default=Decimal('0.00'),
+    )
+    shipment_cost = models.DecimalField(
+        decimal_places=2,
+        max_digits=8,
+        verbose_name='Стоимость отправления',
+        default=Decimal('0.00'),
+    )
+    markup = models.PositiveIntegerField(
+        verbose_name='Логистическая наценка, %',
+        default=0,
     )
     currency = models.ForeignKey(
         'common.Currency',
@@ -131,6 +141,9 @@ class SystemSettingConfig(models.Model):
         verbose_name='Ставка НДС',
         choices=VatRate.get_choices(),
         default=VatRate.NON_TAXABLE,
+    )
+    default_markup = models.PositiveIntegerField(
+        verbose_name='Коэффициент наценки стоимости товара по умолчанию, %',
     )
     is_selected = models.BooleanField(
         verbose_name='Активная конфигурация',

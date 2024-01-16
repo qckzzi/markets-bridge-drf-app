@@ -19,6 +19,7 @@ from common.models import (
     Log,
     Marketplace,
     PersonalArea,
+    SystemSettingConfig,
     SystemVariable,
 )
 from common.utils import (
@@ -155,3 +156,15 @@ def get_personal_areas():
 
 def get_logs():
     return Log.objects.all()
+
+
+def get_default_markup():
+    selected_config = get_selected_system_setting_config()
+
+    return selected_config.default_markup
+
+
+def get_selected_system_setting_config():
+    return SystemSettingConfig.objects.get(
+        is_selected=True,
+    )
