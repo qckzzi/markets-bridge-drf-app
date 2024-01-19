@@ -276,6 +276,46 @@ class WarehouseIsNullFilter(BaseNullFilter):
     parameter_name = 'warehouse_is_null'
 
 
+class InputFilter(admin.SimpleListFilter):
+    template = 'admin/input_filter.html'
+
+    def lookups(self, request, model_admin):
+        return ((),)
+
+    def choices(self, changelist):
+        all_choice = next(super().choices(changelist))
+        all_choice['query_parts'] = (
+            (k, v)
+            for k, v in changelist.get_filters_params().items()
+            if k != self.parameter_name
+        )
+        yield all_choice
+
+
+class DiscountedPriceFromFilter(InputFilter):
+    parameter_name = 'discounted_price_from'
+    title = 'Цена со скидкой от'
+
+    def queryset(self, request, queryset):
+        if self.value() is not None:
+            price = self.value()
+            return queryset.filter(
+                discounted_price__gte=price,
+            )
+
+
+class DiscountedPriceTOFilter(InputFilter):
+    parameter_name = 'discounted_price_to'
+    title = 'Цена со скидкой до'
+
+    def queryset(self, request, queryset):
+        if self.value() is not None:
+            price = self.value()
+            return queryset.filter(
+                discounted_price__lte=price,
+            )
+
+
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
     list_display = (
@@ -336,6 +376,8 @@ class ProductAdmin(admin.ModelAdmin):
         'is_export_allowed',
     )
     list_filter = (
+        DiscountedPriceFromFilter,
+        DiscountedPriceTOFilter,
         'is_export_allowed',
         IsMatchedCategoryFilter,
         ('category', RelatedOnlyDropdownFilter),
