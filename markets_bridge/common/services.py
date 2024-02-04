@@ -168,3 +168,10 @@ def get_selected_system_setting_config():
     return SystemSettingConfig.objects.get(
         is_selected=True,
     )
+
+
+def create_product_type_characteristic_matching(category_matching_id: int) -> CharacteristicMatching:
+    return CharacteristicMatching.objects.create(
+        category_matching_id=category_matching_id,
+        recipient_characteristic_id=8229,
+    )

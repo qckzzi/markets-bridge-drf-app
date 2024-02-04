@@ -11,6 +11,7 @@ from common.models import (
     CharacteristicMatching,
 )
 from common.services import (
+    create_product_type_characteristic_matching,
     get_recipient_category_id_by_category_mathing_id,
 )
 from recipient.utils import (
@@ -41,4 +42,21 @@ def category_matching_saved(sender, instance, created, **kwargs):
         ).delete()
 
         if instance.recipient_category:
-            update_recipient_attributes(instance.recipient_category.external_id, instance.id)
+            create_product_type_characteristic_matching(instance.id)
+
+
+@receiver(post_save, sender=CharacteristicMatching)
+def characteristic_matching_saved(sender, instance, created, **kwargs):
+    """Производит действия после сохранения записи сопоставления характеристики."""
+
+    # FIXME: Место прибито гвоздями.
+    #        Эта проверка захардкожена, т.к. пока не найдено решение того,
+    #        как идентифицировать тип товара озона (по факту это характеристика).
+    product_type_characteristic_id = 8229
+
+    if instance.recipient_characteristic.external_id == product_type_characteristic_id and instance.recipient_value:
+        update_recipient_attributes(
+            instance.category_matching.recipient_category.external_id,
+            instance.recipient_value.external_id,
+            instance.category_matching_id
+        )
