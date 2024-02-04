@@ -171,7 +171,12 @@ def get_selected_system_setting_config():
 
 
 def create_product_type_characteristic_matching(category_matching_id: int) -> CharacteristicMatching:
+    characteristic_for_category = CharacteristicForCategory.objects.get(
+        category__matchings=category_matching_id,
+        characteristic__external_id=8229,
+    )
+
     return CharacteristicMatching.objects.create(
         category_matching_id=category_matching_id,
-        recipient_characteristic_id=8229,
+        recipient_characteristic=characteristic_for_category,
     )

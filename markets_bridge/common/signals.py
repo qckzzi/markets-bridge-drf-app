@@ -52,9 +52,10 @@ def characteristic_matching_saved(sender, instance, created, **kwargs):
     # FIXME: Место прибито гвоздями.
     #        Эта проверка захардкожена, т.к. пока не найдено решение того,
     #        как идентифицировать тип товара озона (по факту это характеристика).
-    product_type_characteristic_id = 8229
+    product_type_characteristic_external_id = 8229
+    characteristic_external_id = instance.recipient_characteristic.characteristic.external_id
 
-    if instance.recipient_characteristic.external_id == product_type_characteristic_id and instance.recipient_value:
+    if characteristic_external_id == product_type_characteristic_external_id and instance.recipient_value:
         update_recipient_attributes(
             instance.category_matching.recipient_category.external_id,
             instance.recipient_value.external_id,
