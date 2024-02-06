@@ -25,6 +25,9 @@ from common.models import (
 from common.utils import (
     get_exchange_rate,
 )
+from core.constants import (
+    PRODUCT_TYPE_CHARACTERISTIC_EXTERNAL_ID,
+)
 from recipient.models import (
     CharacteristicForCategory,
     CharacteristicValue,
@@ -55,6 +58,8 @@ def create_characteristic_matchings_by_category_matching_id(category_matching_id
     ).values_list(
         'id',
         flat=True,
+    ).exclude(
+        characteristic__external_id=PRODUCT_TYPE_CHARACTERISTIC_EXTERNAL_ID,
     )
 
     char_matching_list = [
@@ -171,9 +176,10 @@ def get_selected_system_setting_config():
 
 
 def create_product_type_characteristic_matching(category_matching_id: int) -> CharacteristicMatching:
-    characteristic_for_category = CharacteristicForCategory.objects.get(
+    characteristic_for_category, is_new = CharacteristicForCategory.objects.get_or_create(
         category__matchings=category_matching_id,
-        characteristic__external_id=8229,
+        characteristic__external_id=PRODUCT_TYPE_CHARACTERISTIC_EXTERNAL_ID,
+        defaults={'is_required': True},
     )
 
     return CharacteristicMatching.objects.create(
