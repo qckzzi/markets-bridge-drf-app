@@ -253,10 +253,6 @@ def get_products_for_import(personal_area: PersonalArea) -> dict:
         is_export_allowed=True,
         warehouse__personal_area=personal_area,
         upload_date__isnull=True,
-        width__gt=0,
-        height__gt=0,
-        depth__gt=0,
-        weight__gt=0,
     ).select_related(
         'brand',
         'marketplace__currency',
@@ -516,9 +512,15 @@ def get_products_for_stock_update(personal_area: PersonalArea):
     )
 
     for product in products:
+        has_all_dimensions = all((
+            product.width,
+            product.height,
+            product.depth,
+            product.weight,
+        ))
         raw_product = dict(
             offer_id=str(product.id),
-            stock=product.stock_quantity,
+            stock=product.stock_quantity if has_all_dimensions else 0,
             warehouse_id=product.warehouse.external_id,
         )
 
