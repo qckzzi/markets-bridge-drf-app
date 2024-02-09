@@ -1,5 +1,8 @@
 import json
-import os
+
+from django.db.models import (
+    QuerySet,
+)
 
 from common.services import (
     get_personal_areas,
@@ -20,6 +23,7 @@ from provider.services import (
     get_products_for_import,
     get_products_for_price_update,
     get_products_for_stock_update,
+    get_request_bodies_for_products_archive,
     get_request_body_for_product_update,
 )
 
@@ -92,6 +96,12 @@ def update_product_stocks():
         if products:
             message = {'products': products, 'method': ProductActionType.UPDATE_PRODUCT_STOCKS}
             publish_to_outloading_queue(json.dumps(message))
+
+
+def archive_products(products: QuerySet[Product]):
+    for body in get_request_bodies_for_products_archive(products):
+        message = {'products': body, 'method': ProductActionType.ARCHIVE_PRODUCTS}
+        publish_to_outloading_queue(json.dumps(message))
 
 
 def publish_to_outloading_queue(message: str):

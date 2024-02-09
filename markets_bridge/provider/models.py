@@ -12,6 +12,9 @@ from common.models import (
 from common.services import (
     get_default_markup,
 )
+from provider.enums import (
+    ProductStatusEnum,
+)
 
 
 class Category(models.Model):
@@ -302,9 +305,14 @@ class Product(models.Model):
         null=True,
         blank=True,
     )
+    status = models.PositiveSmallIntegerField(
+        choices=ProductStatusEnum.get_choices(),
+        default=ProductStatusEnum.ACTIVE,
+        verbose_name='Статус',
+    )
 
     def __str__(self):
-        return self.name_and_translate
+        return f'{self.name_and_translate} ({ProductStatusEnum.labels[self.status]})'
 
     @property
     def name_and_translate(self):
