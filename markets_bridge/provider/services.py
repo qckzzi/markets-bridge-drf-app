@@ -296,6 +296,28 @@ def get_request_body_for_product_update(product: Product):
     return dict(items=items, personal_area=raw_personal_area_variables) if items else {}
 
 
+def get_request_bodies_for_products_archive(products: QuerySet[Product]) -> list[dict]:
+    personal_areas = PersonalArea.objects.filter(
+        warehouse__products__in=products,
+    ).distinct()
+
+    for personal_area in personal_areas:
+        product_ids = products.filter(
+            warehouse__personal_area=personal_area,
+        ).values_list(
+            'pk',
+            flat=True,
+        )
+        personal_area_variables = SystemVariable.objects.filter(
+            related_personal_areas__personal_area=personal_area,
+        )
+        system_variable_serializer = SystemVariableSerializer(personal_area_variables, many=True)
+        raw_personal_area_variables = system_variable_serializer.data
+        body = dict(product_ids=list(product_ids), personal_area=raw_personal_area_variables)
+
+        yield body
+
+
 def serialize_product_for_import(product: Product) -> dict:
     attributes = []
     category_matching = product.category.matching
@@ -615,6 +637,11 @@ def get_products_to_update() -> QuerySet[Product]:
 
 
 def update_product_export_allowance(products: QuerySet[Product], is_allowed: bool):
-    products.update(
+    return products.update(
         is_export_allowed=is_allowed,
+    )
+
+def update_products_status(products: QuerySet[Product], status: int):
+    return products.update(
+        status=status,
     )
