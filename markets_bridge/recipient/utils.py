@@ -11,9 +11,10 @@ from recipient.services import (
 )
 
 
-def update_recipient_attributes(category_external_id: int, matching_id: int):
+def update_recipient_attributes(category_external_id: int, product_type_external_id: int, matching_id: int):
     message = {
         'category_external_id': category_external_id,
+        'product_type_external_id': product_type_external_id,
         'matching_id': matching_id,
         'method': LoadingOperationType.LOAD_FOR_CATEGORY,
     }
