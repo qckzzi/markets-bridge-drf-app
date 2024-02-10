@@ -30,6 +30,9 @@ from core.admin import (
     BaseNullFilter,
     BaseYesOrNoFilter,
 )
+from provider.enums import (
+    ProductStatusEnum,
+)
 from provider.models import (
     Brand,
     Category,
@@ -41,10 +44,15 @@ from provider.models import (
 )
 from provider.services import (
     update_product_export_allowance,
+    update_products_status,
 )
 from provider.strings import (
+    ARCHIVE_PRODUCT_IS_SUCCESS,
     BLANK_VALUE_FOR_UPDATE_MESSAGE,
     UPDATE_PRODUCT_IS_SUCCESS,
+)
+from provider.utils import (
+    archive_products,
 )
 
 
@@ -276,6 +284,47 @@ class WarehouseIsNullFilter(BaseNullFilter):
     parameter_name = 'warehouse_is_null'
 
 
+class ArchivedFilter(BaseYesOrNoFilter):
+    title = 'В архиве'
+    parameter_name = 'is_archived'
+    default_value = 'False'
+
+    def queryset(self, request, queryset):
+        value = self.value()
+
+        if value is not None:
+            is_archived = value == 'True'
+
+            if is_archived:
+                queryset = queryset.filter(
+                    status=ProductStatusEnum.ARCHIVED,
+                )
+            else:
+                queryset = queryset.filter(
+                    status=ProductStatusEnum.ACTIVE,
+                )
+
+        return queryset
+
+    def value(self):
+        value = super().value()
+
+        if value is None:
+            value = self.default_value
+
+        return value
+
+    def choices(self, changelist):
+        for lookup, title in self.lookup_choices:
+            yield {
+                "selected": self.value() == str(lookup),
+                "query_string": changelist.get_query_string(
+                    {self.parameter_name: lookup}
+                ),
+                "display": title,
+            }
+
+
 class InputFilter(admin.SimpleListFilter):
     template = 'admin/input_filter.html'
 
@@ -389,6 +438,7 @@ class ProductAdmin(admin.ModelAdmin):
         DepthIsBlankFilter,
         WeightIsBlankFilter,
         AvailableFilter,
+        ArchivedFilter,
     )
     autocomplete_fields = (
         'warehouse',
@@ -406,6 +456,8 @@ class ProductAdmin(admin.ModelAdmin):
         'update_height',
         'update_depth',
         'update_weight',
+        'archive',
+        'return_from_archive',
     )
     action_form = ProductActionForm
     list_per_page = 25
@@ -473,6 +525,19 @@ class ProductAdmin(admin.ModelAdmin):
         self._update_value(request, queryset, 'weight')
 
     update_weight.short_description = 'Изменить вес'
+
+    def archive(self, request, queryset):
+        archive_products(queryset)
+        update_products_status(queryset, ProductStatusEnum.ARCHIVED)
+        messages.success(request, ARCHIVE_PRODUCT_IS_SUCCESS)
+
+    archive.short_description = 'Архивировать'
+
+    def return_from_archive(self, request, queryset):
+        update_products_status(queryset, ProductStatusEnum.ACTIVE)
+        messages.success(request, UPDATE_PRODUCT_IS_SUCCESS)
+
+    return_from_archive.short_description = 'Вернуть из архива'
 
     def _update_value(self, request, queryset, field_name):
         form = self.action_form(request.POST)
