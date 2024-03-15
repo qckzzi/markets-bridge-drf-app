@@ -12,4 +12,6 @@ class CommonConfig(AppConfig):
         from common.signals import (
             category_matching_pre_saved,
             category_matching_saved,
+            characteristic_matching_pre_saved,
+            characteristic_matching_saved,
         )

@@ -29,6 +29,7 @@ from core.constants import (
     PRODUCT_TYPE_CHARACTERISTIC_EXTERNAL_ID,
 )
 from recipient.models import (
+    Characteristic,
     CharacteristicForCategory,
     CharacteristicValue,
 )
@@ -175,11 +176,12 @@ def get_selected_system_setting_config():
     )
 
 
-def create_product_type_characteristic_matching(category_matching_id: int) -> CharacteristicMatching:
+def create_product_type_characteristic_matching(category_matching_id: int, category_id: int) -> CharacteristicMatching:
+    characteristic_id = Characteristic.objects.get(external_id=PRODUCT_TYPE_CHARACTERISTIC_EXTERNAL_ID).id
     characteristic_for_category, is_new = CharacteristicForCategory.objects.get_or_create(
         category__matchings=category_matching_id,
         characteristic__external_id=PRODUCT_TYPE_CHARACTERISTIC_EXTERNAL_ID,
-        defaults={'is_required': True},
+        defaults={'is_required': True, 'category_id': category_id, 'characteristic_id': characteristic_id},
     )
 
     return CharacteristicMatching.objects.create(

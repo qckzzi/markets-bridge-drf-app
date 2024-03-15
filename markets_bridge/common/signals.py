@@ -48,11 +48,11 @@ def category_matching_saved(sender, instance, created, **kwargs):
         ).delete()
 
         if instance.recipient_category:
-            create_product_type_characteristic_matching(instance.id)
+            create_product_type_characteristic_matching(instance.id, instance.recipient_category_id)
 
 
 @receiver(pre_save, sender=CharacteristicMatching)
-def category_matching_pre_saved(sender, instance, *args, **kwargs):
+def characteristic_matching_pre_saved(sender, instance, *args, **kwargs):
     """Кеширует данные перед сохранением."""
 
     characteristic_external_id = instance.recipient_characteristic.characteristic.external_id

@@ -14,3 +14,4 @@ static/
 *.bak
 *.dat
 *.dir
+db_data
