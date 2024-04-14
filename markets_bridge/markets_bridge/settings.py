@@ -75,8 +75,8 @@ WSGI_APPLICATION = 'markets_bridge.wsgi.application'
 
 #AMQP
 AMQP_CONNECTION_PARAMETERS = {
-    'host': 'localhost',
-    'port': 5672,
+    'host': os.getenv('MQ_HOST'),
+    'port': os.getenv('MQ_PORT'),
     'heartbeat': 300,
     'blocked_connection_timeout': 300,
     'credentials': PlainCredentials(username=os.getenv("MQ_USER"), password=os.getenv("MQ_PASSWORD"))
@@ -93,8 +93,8 @@ DATABASES = {
         'NAME': os.getenv('DB_NAME'),
         'USER': os.getenv('DB_USER_NAME'),
         'PASSWORD': os.getenv('DB_PASSWORD'),
-        'HOST': 'localhost',
-        'PORT': 5433,
+        'HOST': os.getenv('DB_HOST'),
+        'PORT': os.getenv('DB_PORT'),
     }
 }
 
