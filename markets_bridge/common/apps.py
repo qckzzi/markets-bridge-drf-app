@@ -11,5 +11,5 @@ class CommonConfig(AppConfig):
     def ready(self):
         from common.signals import (
             category_matching_pre_saved,
-            category_matching_saved,
+            # category_matching_saved,
         )

@@ -1,5 +1,5 @@
 from django.db.models import (
-    QuerySet,
+    QuerySet, F,
 )
 from django.db.transaction import (
     atomic,
@@ -77,7 +77,10 @@ def update_or_create_characteristic_value(value_data: dict) -> tuple[Characteris
     """Создает новое значение характеристики, либо обновляет его."""
 
     external_id = value_data.get('external_id')
-    characteristic_external_id = value_data.pop('characteristic_external_id')
+    try:
+        characteristic_external_id = value_data.pop('characteristic_external_id')
+    except KeyError:
+        ...
     marketplace_id = value_data.get('marketplace_id')
 
     characteristic = get_object_or_404(
@@ -97,14 +100,14 @@ def update_or_create_characteristic_value(value_data: dict) -> tuple[Characteris
     return characteristic_value, is_new
 
 
-def get_matched_category_external_ids() -> QuerySet[int]:
+def get_matched_category_external_ids() -> list[dict]:
     """Возвращает категории получателя, сопоставленные с категориями поставщика."""
 
-    categories = Category.objects.filter(
+    categories = list(Category.objects.filter(
         matchings__isnull=False,
-    ).values_list(
-        'external_id',
-        flat=True,
-    ).distinct()
+    ).values(
+        product_type_external_id=F('external_id'),
+        category_external_id=F('parent_category__external_id')
+    ).distinct())
 
     return categories

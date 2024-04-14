@@ -373,3 +373,21 @@ class Warehouse(models.Model):
 
     def __str__(self):
         return f'{self.name} ({self.personal_area.name})'
+
+
+class YarvetProductMatchings(models.Model):
+    article_number = models.CharField(
+        verbose_name='Артикул в ярвет', 
+        max_length=255, 
+        unique=True,
+        db_index=True,
+    )
+    external_id = models.IntegerField(
+        verbose_name='Идентификатор в ярвет',
+        unique=True,
+        db_index=True,
+    )
+
+    class Meta:
+        verbose_name = 'Сопоставление артикула и идентификатора товара'
+        verbose_name_plural = 'Сопоставления артикулов и идентификаторов товаров'

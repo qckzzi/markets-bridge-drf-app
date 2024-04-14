@@ -58,6 +58,8 @@ class Characteristic(models.Model):
         verbose_name='Внешний id в системе маркетплейса',
         db_index=True,
         default=0,
+        null=True,
+        blank=True,
     )
     name = models.CharField(
         verbose_name='Наименование',

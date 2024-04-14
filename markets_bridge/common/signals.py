@@ -47,8 +47,8 @@ def category_matching_saved(sender, instance, created, **kwargs):
             category_matching_id=instance.id,
         ).delete()
 
-        if instance.recipient_category:
-            create_product_type_characteristic_matching(instance.id)
+        # if instance.recipient_category:
+        #     create_product_type_characteristic_matching(instance.id)
 
 
 @receiver(pre_save, sender=CharacteristicMatching)

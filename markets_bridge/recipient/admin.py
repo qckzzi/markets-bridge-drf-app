@@ -34,7 +34,6 @@ class CategoryAdmin(ReadOnlyModelAdmin):
         # FIXME: Бизнес-логика в UI ;(
         queryset = queryset.filter(
             parent_category__isnull=False,
-            children__isnull=False,
         ).distinct()
 
         return queryset, may_have_duplicates

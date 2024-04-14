@@ -3,13 +3,8 @@ from pathlib import (
     Path,
 )
 
+from pika import PlainCredentials
 import sentry_sdk
-from celery.schedules import (
-    crontab,
-)
-from django.contrib import (
-    admin,
-)
 from dotenv import (
     load_dotenv,
 )
@@ -84,6 +79,7 @@ AMQP_CONNECTION_PARAMETERS = {
     'port': 5672,
     'heartbeat': 300,
     'blocked_connection_timeout': 300,
+    'credentials': PlainCredentials(username=os.getenv("MQ_USER"), password=os.getenv("MQ_PASSWORD"))
 }
 
 #Celery
@@ -98,7 +94,7 @@ DATABASES = {
         'USER': os.getenv('DB_USER_NAME'),
         'PASSWORD': os.getenv('DB_PASSWORD'),
         'HOST': 'localhost',
-        'PORT': '',
+        'PORT': 5433,
     }
 }
 

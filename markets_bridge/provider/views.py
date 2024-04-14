@@ -28,11 +28,15 @@ from provider.serializer import (
     ProductSerializer,
 )
 from provider.services import (
+    compare_product_characteristics,
     create_or_update_product,
     get_or_create_brand,
     get_or_create_category,
     get_or_create_characteristic_value,
     update_or_create_characteristic,
+)
+from rest_framework.decorators import (
+    action,
 )
 
 
@@ -42,15 +46,20 @@ class ProductAPIViewSet(AuthenticationMixin, ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         product, is_new = create_or_update_product(request.data)
-        serializer = self.get_serializer(product)
 
         if is_new:
             http_status = status.HTTP_201_CREATED
         else:
             http_status = status.HTTP_200_OK
 
-        return Response(status=http_status, data=serializer.data)
+        return Response(status=http_status, data={"id": product.id})
+    
+    @action(['POST'], detail=False)
+    def compare_characteristics(self, request):
+        product_id = request.data['product_id']
+        compare_product_characteristics(product_id)
 
+        return Response(status=status.HTTP_201_CREATED)
 
 class ProductImageAPIViewSet(AuthenticationMixin, ModelViewSet):
     queryset = ProductImage.objects.all()
@@ -65,15 +74,11 @@ class CategoryAPIViewSet(AuthenticationMixin, ModelViewSet):
         category, is_new = get_or_create_category(request.data)
 
         if is_new:
-            serializer = self.get_serializer(category)
-            response = Response(status=status.HTTP_201_CREATED, data=serializer.data)
+            http_status = status.HTTP_201_CREATED
         else:
-            response = Response(
-                data={'message': f'The "{category.name}" category already exists.'},
-                status=status.HTTP_200_OK,
-            )
+            http_status = status.HTTP_200_OK
 
-        return response
+        return Response(status=http_status, data={"id": category.id})
 
 
 class CharacteristicAPIViewSet(AuthenticationMixin, ModelViewSet):
@@ -84,15 +89,11 @@ class CharacteristicAPIViewSet(AuthenticationMixin, ModelViewSet):
         characteristic, is_new = update_or_create_characteristic(request.data)
 
         if is_new:
-            serializer = self.get_serializer(characteristic)
-            response = Response(data=serializer.data, status=status.HTTP_201_CREATED)
+            http_status = status.HTTP_201_CREATED
         else:
-            response = Response(
-                data={'message': f'The "{characteristic.name}" characteristic already exists.'},
-                status=status.HTTP_200_OK,
-            )
+            http_status = status.HTTP_200_OK
 
-        return response
+        return Response(status=http_status, data={"id": characteristic.id})
 
 
 class CharacteristicValueAPIViewSet(AuthenticationMixin, ModelViewSet):
@@ -103,15 +104,11 @@ class CharacteristicValueAPIViewSet(AuthenticationMixin, ModelViewSet):
         characteristic_value, is_new = get_or_create_characteristic_value(request.data)
 
         if is_new:
-            serializer = self.get_serializer(characteristic_value)
-            response = Response(data=serializer.data, status=status.HTTP_201_CREATED)
+            http_status = status.HTTP_201_CREATED
         else:
-            response = Response(
-                data={'message': f'The "{characteristic_value.value}" characteristic value already exists.'},
-                status=status.HTTP_200_OK,
-            )
+            http_status = status.HTTP_200_OK
 
-        return response
+        return Response(status=http_status, data={"id": characteristic_value.id})
 
 
 class BrandAPIViewSet(AuthenticationMixin, ModelViewSet):
@@ -120,11 +117,10 @@ class BrandAPIViewSet(AuthenticationMixin, ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         brand, is_new = get_or_create_brand(request.data)
-        serializer = self.get_serializer(brand)
 
         if is_new:
-            status_code = status.HTTP_201_CREATED
+            http_status = status.HTTP_201_CREATED
         else:
-            status_code = status.HTTP_200_OK
+            http_status = status.HTTP_200_OK
 
-        return Response(data=serializer.data, status=status_code)
+        return Response(status=http_status, data={"id": brand.id})

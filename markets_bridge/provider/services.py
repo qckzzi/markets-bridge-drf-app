@@ -14,13 +14,13 @@ from django.db.models import (
 from django.db.transaction import (
     atomic,
 )
+from django.http import Http404, HttpResponseBadRequest
 from rest_framework.generics import (
     get_object_or_404,
 )
 
 from common.models import (
     CategoryMatching,
-    CharacteristicValueMatching,
     Logistics,
     PersonalArea,
     SystemSettingConfig,
@@ -33,6 +33,7 @@ from common.services import (
     convert_value,
     write_log,
 )
+from core.constants import PRODUCT_TYPE_CHARACTERISTIC_EXTERNAL_ID
 from provider.models import (
     Brand,
     Category,
@@ -43,7 +44,11 @@ from provider.models import (
 )
 from recipient.models import (
     CharacteristicValue as RecipientCharacteristicValue,
+    Category as RecipientCategory,
+    Characteristic as RecipientCharacteristic,
 )
+
+from recipient.utils import update_recipient_attributes_for_product
 
 
 # TODO: Декомпозировать
@@ -64,10 +69,13 @@ def create_or_update_product(product_data: dict) -> tuple[Product, bool]:
         category_name = product_data.pop('category_name')
         category_getting_kwargs['name'] = category_name
 
-    category = get_object_or_404(
-        Category,
+    category = Category.objects.filter(
         **category_getting_kwargs,
-    )
+    ).first()
+
+    if not category:
+        raise Http404('Category is not found')
+
     product_data['category_id'] = category.id
 
     brand_getting_kwargs = dict(
@@ -77,25 +85,31 @@ def create_or_update_product(product_data: dict) -> tuple[Product, bool]:
     if product_data.get('brand_external_id'):
         brand_external_id = product_data.pop('brand_external_id')
         brand_getting_kwargs['external_id'] = brand_external_id
-    elif product_data.get('brand_name'):
+    elif product_data.get('brand_name', None) is not None:
         brand_name = product_data.pop('brand_name')
         brand_getting_kwargs['name'] = brand_name
 
-    brand = get_object_or_404(
-        Brand,
+    brand = Brand.objects.filter(
         **brand_getting_kwargs,
-    )
+    ).first()
+
+    if not brand:
+        raise Http404('Brand is not found')
+
     product_data['brand_id'] = brand.id
 
     external_id = product_data.get('external_id')
 
     value_external_ids = []
-    values = []
+    characteristics = []
 
     if product_data.get('characteristic_value_external_ids'):
         value_external_ids = product_data.pop('characteristic_value_external_ids')
-    elif product_data.get('characteristic_values'):
-        values = product_data.pop('characteristic_values')
+    elif product_data.get('characteristics'):
+        characteristics = product_data.pop('characteristics')
+
+    product_data['translated_name'] = product_data['name']
+    product_data['translated_description'] = product_data['description']
 
     product, is_new = Product.objects.get_or_create(
         external_id=external_id,
@@ -104,10 +118,11 @@ def create_or_update_product(product_data: dict) -> tuple[Product, bool]:
     )
 
     if not is_new:
-        product.price = product_data['price']
-        product.discounted_price = product_data['discounted_price']
-        product.stock_quantity = product_data['stock_quantity']
-        product.save()
+        if product_data.get('price'):
+            product.price = product_data['price']
+            product.discounted_price = product_data['discounted_price']
+            product.stock_quantity = product_data['stock_quantity']
+            product.save()
     elif value_external_ids:
         characteristic_values = CharacteristicValue.objects.filter(
             external_id__in=value_external_ids,
@@ -118,25 +133,39 @@ def create_or_update_product(product_data: dict) -> tuple[Product, bool]:
             ProductValue(product=product, value_id=value_id)
             for value_id in characteristic_values.values_list('id', flat=True)
         )
-    elif values:
-        characteristic_values = CharacteristicValue.objects.filter(
-            value__in=values,
-            marketplace_id=marketplace_id,
-        )
+    elif characteristics:
+        product_values = []
+        for ch in characteristics:
+            characteristic_value = CharacteristicValue.objects.filter(
+                value=ch["value"],
+                characteristic__name=ch["name"],
+                marketplace_id=marketplace_id,
+            ).first()
 
-        ProductValue.objects.bulk_create(
-            ProductValue(product=product, value_id=value_id)
-            for value_id in characteristic_values.values_list('id', flat=True)
+            if not characteristic_value:
+                raise Http404(f"Characteristic value for '{ch.name}' characteristic is not found")
+
+            product_values.append(ProductValue(product=product, value_id=characteristic_value.id))
+    
+        ProductValue.objects.bulk_create(product_values)
+
+        recipient_product_type = category.matching.recipient_category
+        update_recipient_attributes_for_product(
+            category_external_id=recipient_product_type.parent_category.external_id,
+            product_type_external_id=recipient_product_type.external_id,
+            product_id=product.id,
         )
 
     return product, is_new
 
 
+@atomic
 def get_or_create_category(category_data: dict) -> tuple[Category, bool]:
     """Создает категорию."""
 
     external_id = category_data.get('external_id')
     name = category_data.get('name')
+    category_data['translated_name'] = name
     marketplace_id = category_data.get('marketplace_id')
 
     get_or_create_kwargs = dict(
@@ -148,8 +177,37 @@ def get_or_create_category(category_data: dict) -> tuple[Category, bool]:
         get_or_create_kwargs['external_id'] = external_id
     else:
         get_or_create_kwargs['name'] = name
+        
+    recipient_category = RecipientCategory.objects.filter(
+        name=name,
+        marketplace_id=marketplace_id,
+    ).first()
+    
+    if not recipient_category:
+        raise Http404
 
-    category, is_new = Category.objects.get_or_create(**get_or_create_kwargs)
+    is_new = False
+
+    category = Category.objects.filter(
+        translated_name=recipient_category.name,
+        marketplace_id=marketplace_id,
+    ).first()
+
+    if not category:
+        category = Category.objects.create(
+            name=recipient_category.name,
+            translated_name=recipient_category.name,
+            marketplace_id=marketplace_id,
+            external_id=recipient_category.external_id,
+        )
+
+        is_new = True
+    
+    if not CategoryMatching.objects.filter(provider_category=category).exists():
+        CategoryMatching.objects.create(
+            provider_category=category,
+            recipient_category=recipient_category,
+        )
 
     return category, is_new
 
@@ -159,44 +217,49 @@ def update_or_create_characteristic(characteristic_data: dict) -> tuple[Characte
     """Создает новую характеристику, либо обновляет ее связи с категориями."""
 
     marketplace_id = characteristic_data.get('marketplace_id')
-    external_id = characteristic_data.get('external_id')
-    kwargs_to_characteristic_getting = dict(
-        external_id=external_id,
+    external_id = characteristic_data.get('external_id') or 0
+    type_name = characteristic_data.pop('product_type_name')
+    characteristic_data['external_id'] = external_id
+    characteristic_data['translated_name'] = characteristic_data['name']
+    
+    if not type_name:
+        raise HttpResponseBadRequest
+
+    category = Category.objects.filter(
+        translated_name=type_name,
         marketplace_id=marketplace_id,
-        defaults=characteristic_data,
-    )
+    ).first()
 
-    if characteristic_data.get('name'):
-        kwargs_to_characteristic_getting['name'] = characteristic_data.get('name')
+    if not category:
+        raise Http404("Category not found")
 
-    category_external_ids = []
+    is_new = False
 
-    if characteristic_data.get('category_external_ids'):
-        category_external_ids = characteristic_data.pop('category_external_ids')
+    characteristic = Characteristic.objects.filter(
+        name=characteristic_data['name'],
+        marketplace_id=marketplace_id,
+    ).first()
 
+    if not characteristic:
+        characteristic = Characteristic.objects.create(**characteristic_data)
 
-    characteristic, is_new = Characteristic.objects.get_or_create(
-        **kwargs_to_characteristic_getting,
-    )
+        is_new = True
 
-    if category_external_ids:
-        categories = Category.objects.filter(
-            external_id__in=category_external_ids,
-            marketplace_id=marketplace_id,
-        )
-
-        if is_new:
-            characteristic.categories.set(categories)
-        else:
-            characteristic.categories.add(*categories)
+    if is_new:
+        characteristic.categories.set([category])
+    else:
+        characteristic.categories.add(category)
 
     return characteristic, is_new
 
 
+@atomic
 def get_or_create_characteristic_value(value_data: dict) -> tuple[CharacteristicValue, bool]:
     """Создает новое значение характеристики, либо обновляет его."""
 
-    external_id = value_data.get('external_id')
+    external_id = value_data.get('external_id') or 0
+    value_data['external_id'] = external_id
+    value_data['translated_value'] = value_data['value']
     marketplace_id = value_data.get('marketplace_id')
     kwargs_to_characteristic_getting = dict(
         external_id=external_id,
@@ -204,37 +267,31 @@ def get_or_create_characteristic_value(value_data: dict) -> tuple[Characteristic
         defaults=value_data,
     )
 
-    if value_data.get('value'):
-        kwargs_to_characteristic_getting['value'] = value_data['value']
+    kwargs_to_characteristic_getting['value'] = value_data['value']
 
-    if value_data.get('characteristic_name'):
-        characteristic_name = value_data.pop('characteristic_name')
-        characteristic = get_object_or_404(
-            Characteristic,
-            name=characteristic_name,
-            marketplace_id=marketplace_id,
-        )
-    else:
-        characteristic_external_id = value_data.pop('characteristic_external_id')
-        characteristic = get_object_or_404(
-            Characteristic,
-            external_id=characteristic_external_id,
-            marketplace_id=marketplace_id,
-        )
+    characteristic_name = value_data.pop('characteristic_name')
+    characteristic = Characteristic.objects.filter(
+        name=characteristic_name,
+        marketplace_id=marketplace_id,
+    ).first()
 
-    value_data['characteristic_id'] = characteristic.id
+    kwargs_to_characteristic_getting['characteristic_id'] = characteristic.id
 
-    characteristic_value, is_new = CharacteristicValue.objects.get_or_create(
-        **kwargs_to_characteristic_getting,
-    )
+    is_new = False
+
+    characteristic_value = CharacteristicValue.objects.filter(
+        value=value_data['value'],
+        marketplace_id=marketplace_id,
+        characteristic_id=characteristic.id,
+    ).first()
+
+    if not characteristic_value:
+        value_data["characteristic_id"] = characteristic.id
+        characteristic_value = CharacteristicValue.objects.create(**value_data)
+
+        is_new = True
 
     return characteristic_value, is_new
-
-
-def create_category_matching(category_id) -> CategoryMatching:
-    return CategoryMatching.objects.create(
-        provider_category_id=category_id,
-    )
 
 
 # TODO: Логика выгрузки товара должна быть переделана, DRF не должен формировать данные под формат озона
@@ -273,8 +330,6 @@ def get_products_for_import(personal_area: PersonalArea) -> dict:
     return dict(items=items, personal_area=raw_personal_area_variables) if items else {}
 
 
-# TODO: Я себе обещаю, что скоро переделаю эту порнографию
-#    (￢_￢)
 @atomic
 def get_request_body_for_product_update(product: Product):
     items = []
@@ -321,78 +376,53 @@ def get_request_bodies_for_products_archive(products: QuerySet[Product]) -> list
 def serialize_product_for_import(product: Product) -> dict:
     attributes = []
     category_matching = product.category.matching
-    recipient_category = category_matching.recipient_category
+    product_type = category_matching.recipient_category
 
-    if not recipient_category:
+    if not product_type:
         error = f'У товара {product} с ID: {product.id} не сопоставлена категория'
         raise ValueError(error)
 
-    product_characteristic_values = product.characteristic_values.all()
+    product_characteristics = Characteristic.objects.filter(characteristic_values__in=product.characteristic_values.all()).distinct()
 
-    for value in product_characteristic_values:
-        try:
-            recipient_value = value.matchings.get(
-                characteristic_matching__category_matching=category_matching,
-            ).recipient_characteristic_value
-        except CharacteristicValueMatching.DoesNotExist:
-            pass
-        else:
-            attributes.append(
-                dict(
-                    complex_id=0,
-                    id=recipient_value.characteristic.external_id,
-                    values=[dict(dictionary_value_id=recipient_value.external_id)]
-                )
-            )
+    for characteristic in product_characteristics:
+        values = CharacteristicValue.objects.filter(characteristic=characteristic, products=product)
 
-        if recipient_values := value.recipient_characteristic_values.all():
-            for recipient_value in recipient_values:
-                attributes.append(
-                    dict(
-                        complex_id=0,
-                        id=recipient_value.characteristic.external_id,
-                        values=[dict(dictionary_value_id=recipient_value.external_id)]
-                    )
-                )
+        raw_values = []
+        characteristic_external_id = None
 
-    char_matchings_with_default_value = category_matching.characteristic_matchings.filter(
-        recipient_value__isnull=False,
-    )
+        for value in values:
+            if recipient_value := value.recipient_characteristic_values.all().select_related("characteristic").first():
+                raw_values.append(dict(dictionary_value_id=recipient_value.external_id))
 
-    attribute_ids = [attribute['id'] for attribute in attributes]
+                if not characteristic_external_id:
+                    characteristic_external_id = recipient_value.characteristic.external_id
+            else:
+                if not characteristic_external_id:
+                    recipient_characteristic = RecipientCharacteristic.objects.filter(
+                        name__icontains=characteristic.name,
+                    ).first()
 
-    for matching in char_matchings_with_default_value:
-        characteristic_id = matching.recipient_characteristic.characteristic.external_id
+                    if not recipient_characteristic:
+                        break
+                    else:
+                        characteristic_external_id = recipient_characteristic.external_id
 
-        if characteristic_id not in attribute_ids:
-            attributes.append(
-                dict(
-                    complex_id=0,
-                    id=matching.recipient_characteristic.characteristic.external_id,
-                    values=[dict(dictionary_value_id=matching.recipient_value.external_id)]
-                )
-            )
+                if characteristic_external_id:
+                    raw_values.append(dict(value=value.value))
 
-    char_matchings_with_default_raw_value = category_matching.characteristic_matchings.filter(
-        value__isnull=False,
-    )
-
-    for matching in char_matchings_with_default_raw_value:
-        attributes.append(
-            dict(
-                complex_id=0,
-                id=matching.recipient_characteristic.characteristic.external_id,
-                values=[dict(value=matching.value)]
-            )
-        )
+        if raw_values:
+            attributes.append(dict(complex_id=0, id=characteristic_external_id, values=raw_values))
 
     try:
+        if not product.brand.name:
+            raise RecipientCharacteristicValue.DoesNotExist
+
         brand_external_id = RecipientCharacteristicValue.objects.only(
             'external_id',
         ).get(
             value__iexact=product.brand.name,
             characteristic__external_id=85,
-            marketplace_id=2,
+            marketplace_id=1,
         ).external_id
     except RecipientCharacteristicValue.DoesNotExist:
         attributes.append(
@@ -419,13 +449,19 @@ def serialize_product_for_import(product: Product) -> dict:
         )
     )
 
-    product_name = f'{product.brand.name} {product.translated_name} {product.product_code}'
-
     attributes.append(
         dict(
             complex_id=0,
             id=4180,
-            values=[dict(value=product_name)]
+            values=[dict(value=product.translated_name)]
+        )
+    )
+
+    attributes.append(
+        dict(
+            complex_id=0,
+            id=PRODUCT_TYPE_CHARACTERISTIC_EXTERNAL_ID,
+            values=[dict(dictionary_value_id=product_type.external_id)]
         )
     )
 
@@ -450,9 +486,9 @@ def serialize_product_for_import(product: Product) -> dict:
 
     raw_product = dict(
         attributes=attributes,
-        name=product_name,
-        description_category_id=recipient_category.external_id,
-        images=[f'https://{host}{image_record.image.url}' for image_record in product.images.all()],
+        name=product.translated_name,
+        description_category_id=product_type.parent_category.external_id,
+        images=[f'{host}{image_record.image.url}' for image_record in product.images.all()],
         offer_id=str(product.id),
         price=str(product_price),
         vat=vat,
@@ -606,6 +642,7 @@ def _get_converted_product_abstract_price(product: Product, price_field_name: Li
     return product_price_with_markup + logistics_cost_with_markup
 
 
+@atomic
 def get_or_create_brand(brand_data: dict) -> tuple[Brand, bool]:
     external_id = brand_data.get('external_id')
     name = brand_data.get('name')
@@ -621,7 +658,19 @@ def get_or_create_brand(brand_data: dict) -> tuple[Brand, bool]:
     else:
         get_or_create_kwargs['name'] = name
 
-    brand, is_new = Brand.objects.get_or_create(**get_or_create_kwargs)
+    is_new = False
+    brand = Brand.objects.filter(
+        marketplace_id=marketplace_id,
+        name=name,
+    ).first()
+
+    if not brand:
+        brand = Brand.objects.create(
+            marketplace_id=marketplace_id,
+            name=name,
+        )
+
+        is_new = True
 
     return brand, is_new
 
@@ -641,7 +690,32 @@ def update_product_export_allowance(products: QuerySet[Product], is_allowed: boo
         is_export_allowed=is_allowed,
     )
 
+
 def update_products_status(products: QuerySet[Product], status: int):
     return products.update(
         status=status,
     )
+
+
+@atomic
+def compare_product_characteristics(product_id: int):
+    product = Product.objects.get(
+        id=product_id,
+    )
+    
+    characteristic_values = product.characteristic_values
+    
+    for value in characteristic_values.all():
+        if value.recipient_characteristic_values.exists():
+            continue
+        
+        characteristic_name = value.characteristic.name
+        recipient_value = RecipientCharacteristicValue.objects.filter(
+            characteristic__name__icontains=characteristic_name,
+            value__icontains=value.value,
+        ).first()
+
+        if not recipient_value:
+            continue
+
+        value.recipient_characteristic_values.set([recipient_value])

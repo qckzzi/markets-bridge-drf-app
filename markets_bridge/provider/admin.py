@@ -553,9 +553,9 @@ class ProductAdmin(admin.ModelAdmin):
         )
         messages.success(request, UPDATE_PRODUCT_IS_SUCCESS)
 
-
     def currency(self, product):
-        return product.category.marketplace.currency.name
+        if product.category:
+            return product.category.marketplace.currency.name
     
     currency.short_description = 'Валюта'
 

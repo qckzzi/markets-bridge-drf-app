@@ -33,15 +33,19 @@ class CategoryAPIViewSet(AuthenticationMixin, ModelViewSet):
     queryset = Category.objects.all()
 
     def create(self, request, *args, **kwargs):
-        category, is_new = update_or_create_category(request.data)
-        serializer = self.get_serializer(category)
-
-        if is_new:
+        if categories := request.data['objects']:
+            for category in categories:
+                existed_category, _ = update_or_create_category(category)
             http_status = status.HTTP_201_CREATED
         else:
-            http_status = status.HTTP_200_OK
+            category, is_new = update_or_create_category(request.data)
 
-        return Response(data=serializer.data, status=http_status)
+            if is_new:
+                http_status = status.HTTP_201_CREATED
+            else:
+                http_status = status.HTTP_200_OK
+
+        return Response(status=http_status)
 
 
 class CharacteristicAPIViewSet(AuthenticationMixin, ModelViewSet):
@@ -65,12 +69,16 @@ class CharacteristicValueAPIViewSet(AuthenticationMixin, ModelViewSet):
     queryset = CharacteristicValue.objects.all()
 
     def create(self, request, *args, **kwargs):
-        characteristic_value, is_new = update_or_create_characteristic_value(request.data)
-        serializer = self.get_serializer(characteristic_value)
-
-        if is_new:
+        if values := request.data['objects']:
+            for value in values:
+                characteristic_value, _ = update_or_create_characteristic_value(value)
             http_status = status.HTTP_201_CREATED
         else:
-            http_status = status.HTTP_200_OK
+            characteristic_value, is_new = update_or_create_characteristic_value(request.data)
 
-        return Response(data=serializer.data, status=http_status)
+            if is_new:
+                http_status = status.HTTP_201_CREATED
+            else:
+                http_status = status.HTTP_200_OK
+
+        return Response(status=http_status)

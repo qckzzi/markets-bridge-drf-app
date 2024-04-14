@@ -12,9 +12,6 @@ from provider.models import (
     CharacteristicValue,
     Product,
 )
-from provider.services import (
-    create_category_matching,
-)
 from provider.utils import (
     translate_category,
     translate_characteristic,
@@ -27,8 +24,8 @@ from provider.utils import (
 
 @receiver(post_save, sender=Category)
 def category_saved(sender, instance, created, **kwargs):
-    if created:
-        create_category_matching(category_id=instance.pk)
+    # if created:
+    #     create_category_matching(category_id=instance.pk)
 
     if not instance.translated_name:
         translate_category(instance.id, instance.name)

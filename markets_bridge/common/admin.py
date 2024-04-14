@@ -46,7 +46,7 @@ class CurrencyAdmin(admin.ModelAdmin):
 
 
 @admin.register(ExchangeRate)
-class ExchangeRateAdmin(ReadOnlyModelAdmin):
+class ExchangeRateAdmin(admin.ModelAdmin):
     list_display = (
         'source',
         'destination',
@@ -77,7 +77,7 @@ class CategoryMatchingAdmin(admin.ModelAdmin):
     )
     readonly_fields = (
         'provider_category',
-        'characteristic_mathing_button',
+        # 'characteristic_mathing_button',
     )
     list_editable = (
         'recipient_category',
@@ -93,7 +93,7 @@ class CategoryMatchingAdmin(admin.ModelAdmin):
     fields = (
         'provider_category',
         'recipient_category',
-        'characteristic_mathing_button',
+        # 'characteristic_mathing_button',
     )
 
     list_per_page = 10

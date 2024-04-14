@@ -5,6 +5,7 @@ from core.enums import (
 
 class LoadingOperationType(BaseEnumerate):
     LOAD_FOR_CATEGORY = 'LOAD_FOR_CATEGORY'
+    LOAD_FOR_PRODUCT = 'LOAD_FOR_PRODUCT'
     LOAD_CATEGORIES = 'LOAD_CATEGORIES'
     LOAD_BRANDS = 'LOAD_BRANDS'
 
