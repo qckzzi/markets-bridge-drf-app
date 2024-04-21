@@ -331,6 +331,35 @@ def get_products_for_import(personal_area: PersonalArea) -> dict:
 
 
 @atomic
+def get_product_for_import(product_id: int) -> dict:
+    items = []
+    product = Product.objects.filter(
+        id=product_id,
+    ).select_related(
+        'brand',
+        'marketplace__currency',
+        'marketplace__logistics',
+    ).get()
+    personal_area_variables = SystemVariable.objects.filter(
+        related_personal_areas__personal_area=product.warehouse.personal_area,
+    )
+    system_variable_serializer = SystemVariableSerializer(personal_area_variables, many=True)
+    raw_personal_area_variables = system_variable_serializer.data
+
+    try:
+        serialized_product = serialize_product_for_import(product)
+    except ValueError as e:
+        error_message = ', '.join(e.args)
+        logging.info(error_message)
+        write_log(error_message)
+        raise
+    else:
+        items.append(serialized_product)
+
+    return dict(items=items, personal_area=raw_personal_area_variables) if items else {}
+
+
+@atomic
 def get_request_body_for_product_update(product: Product):
     items = []
     personal_area_variables = SystemVariable.objects.filter(

@@ -27,3 +27,13 @@ class VatRate(BaseEnumerate):
         TEN_PERCENT: '10%',
         TWENTY_PERCENT: '20%',
     }
+
+
+class WarehouseTypeEnum(BaseEnumerate):
+    GLOBAL = 'GLOBAL'
+    CUSTOM = 'CUSTOM'
+
+    labels = {
+        GLOBAL: 'Глобальный',
+        CUSTOM: 'Пользовательский',
+    }

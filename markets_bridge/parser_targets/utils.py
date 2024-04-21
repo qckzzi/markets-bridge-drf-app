@@ -36,7 +36,7 @@ def send_target_categories_to_parsing():
 
     for category in categories:
         message = json.dumps(category.url)
-        publish_to_parsing_queue(message, category.marketplace_id, headers={"ENTITY_TYPE": EntityType.CATEGORY})
+        publish_to_parsing_queue(message, marketplace_id=category.marketplace_id, headers={"ENTITY_TYPE": EntityType.CATEGORY})
 
 
 def publish_to_parsing_queue(message: str, headers: dict, marketplace_id: int):

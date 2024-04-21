@@ -20,6 +20,7 @@ from provider.models import (
     Product,
 )
 from provider.services import (
+    get_product_for_import,
     get_products_for_import,
     get_products_for_price_update,
     get_products_for_stock_update,
@@ -66,6 +67,14 @@ def load_products():
         if products:
             message = {'products': products, 'method': ProductActionType.LOAD_PRODUCTS}
             publish_to_outloading_queue(json.dumps(message))
+
+
+def load_product(product_id: int):
+    product = get_product_for_import(product_id)
+
+    if product:
+        message = {'products': product, 'method': ProductActionType.LOAD_PRODUCTS}
+        publish_to_outloading_queue(json.dumps(message))
 
 
 def update_product(product: Product):

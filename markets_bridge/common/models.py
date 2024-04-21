@@ -9,6 +9,7 @@ from django.db import (
 from common.enums import (
     MarketplaceTypeEnum,
     VatRate,
+    WarehouseTypeEnum,
 )
 
 
@@ -365,6 +366,10 @@ class Warehouse(models.Model):
     personal_area = models.ForeignKey(
         'common.PersonalArea',
         on_delete=models.CASCADE,
+    )
+    type = models.CharField(
+        verbose_name='Тип',
+        choices=WarehouseTypeEnum.get_choices(),
     )
 
     class Meta:

@@ -43,16 +43,20 @@ from provider.models import (
     ProductValue,
 )
 from provider.services import (
+    compare_product_characteristics,
     update_product_export_allowance,
     update_products_status,
 )
 from provider.strings import (
     ARCHIVE_PRODUCT_IS_SUCCESS,
     BLANK_VALUE_FOR_UPDATE_MESSAGE,
+    COMPARE_PRODUCT_CHARACTERISTICS_IS_SUCCESS,
+    LOAD_PRODUCT_IS_SUCCESS,
     UPDATE_PRODUCT_IS_SUCCESS,
 )
 from provider.utils import (
     archive_products,
+    load_product,
 )
 
 
@@ -458,6 +462,8 @@ class ProductAdmin(admin.ModelAdmin):
         'update_weight',
         'archive',
         'return_from_archive',
+        'compare_product_characteristics',
+        'load_product',
     )
     action_form = ProductActionForm
     list_per_page = 25
@@ -532,6 +538,23 @@ class ProductAdmin(admin.ModelAdmin):
         messages.success(request, ARCHIVE_PRODUCT_IS_SUCCESS)
 
     archive.short_description = 'Архивировать'
+
+    def compare_product_characteristics(self, request, queryset):
+        for product in queryset:
+            compare_product_characteristics(product.id)
+        
+        messages.success(request, COMPARE_PRODUCT_CHARACTERISTICS_IS_SUCCESS)
+    
+    compare_product_characteristics.short_description = 'Сопоставить данные товаров с получателем'
+    
+    def load_product(self, request, queryset):
+        for product in queryset:
+            if product.warehouse:
+                load_product(product.id)
+        
+        messages.success(request, LOAD_PRODUCT_IS_SUCCESS)
+    
+    load_product.short_description = 'Выгрузить товары'
 
     def return_from_archive(self, request, queryset):
         update_products_status(queryset, ProductStatusEnum.ACTIVE)
