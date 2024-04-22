@@ -33,7 +33,8 @@ class CategoryAPIViewSet(AuthenticationMixin, ModelViewSet):
     queryset = Category.objects.all()
 
     def create(self, request, *args, **kwargs):
-        if categories := request.data.get('objects'):
+        if request.data.get('objects') is not None:
+            categories = request.data['objects']
             for category in categories:
                 existed_category, _ = update_or_create_category(category)
             http_status = status.HTTP_201_CREATED
@@ -69,7 +70,8 @@ class CharacteristicValueAPIViewSet(AuthenticationMixin, ModelViewSet):
     queryset = CharacteristicValue.objects.all()
 
     def create(self, request, *args, **kwargs):
-        if values := request.data.get('objects'):
+        if request.data.get('objects') is not None:
+            values = request.data['objects']
             for value in values:
                 characteristic_value, _ = update_or_create_characteristic_value(value)
             http_status = status.HTTP_201_CREATED
