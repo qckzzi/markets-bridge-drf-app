@@ -33,7 +33,7 @@ from common.services import (
     convert_value,
     write_log,
 )
-from core.constants import PRODUCT_TYPE_CHARACTERISTIC_EXTERNAL_ID
+from core.constants import NO_CHARACTERISTIC_VALUE, PRODUCT_TYPE_CHARACTERISTIC_EXTERNAL_ID, YES_CHARACTERISTIC_VALUE
 from provider.models import (
     Brand,
     Category,
@@ -437,7 +437,14 @@ def serialize_product_for_import(product: Product) -> dict:
                         characteristic_external_id = recipient_characteristic.external_id
 
                 if characteristic_external_id:
-                    raw_values.append(dict(value=value.value))
+                    if value.value.strip() in ('Да', 'Нет'):
+                        external_id = (
+                            YES_CHARACTERISTIC_VALUE if value.value.strip() == 'Да' 
+                            else NO_CHARACTERISTIC_VALUE
+                        )
+                        raw_values.append(dict(dictionary_value_id=external_id))
+                    else:
+                        raw_values.append(dict(value=value.value))
 
         if raw_values:
             attributes.append(dict(complex_id=0, id=characteristic_external_id, values=raw_values))
