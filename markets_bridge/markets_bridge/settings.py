@@ -1,3 +1,4 @@
+from datetime import timedelta
 import os
 from pathlib import (
     Path,
@@ -170,3 +171,9 @@ sentry_dsn = os.getenv('SENTRY_DSN')
 
 if sentry_dsn:
     sentry_sdk.init(dsn=sentry_dsn, enable_tracing=True)
+
+# JWT
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1)
+}
